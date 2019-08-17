@@ -18,7 +18,10 @@
     <ClInclude Include="pch.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="brat.h">
+    <ClInclude Include="brain.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pcg_basic.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -29,7 +32,10 @@
     <ClCompile Include="simplelife.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="brat.cpp">
+    <ClCompile Include="brain.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pcg_basic.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
