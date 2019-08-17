@@ -69,7 +69,7 @@ void brat::input_iterate(vector<double>& _input)
 		cerr << "InputNum ERROR!" << endl;
 		exit(-1);
 	}
-	for (auto i = 0; i < input.size; i++) {
+	for (auto i = 0; i < input.size(); i++) {
 		input[i].sum = _input[i];
 		input[i].out = sigmod(input[i].sum);
 	}
@@ -79,7 +79,7 @@ void brat::input_iterate(vector<double>& _input)
 		brain[i].sum_in = 0;
 	}
 
-	for (auto i = 0; i < input.size; i++) {
+	for (auto i = 0; i < input.size(); i++) {
 		for (auto it = input[i].targetLink.begin(); it != input[i].targetLink.end(); it++) {
 			double weight = 0;
 			auto it2 = input[i].targetSign.find(*it);
@@ -100,7 +100,7 @@ void brat::brain_iterate()
 		brain[i].sum = 0;
 	}
 
-	for (auto i = 0; i < brain.size; i++) {
+	for (auto i = 0; i < brain.size(); i++) {
 		for (auto it = brain[i].targetLink.begin(); it != brain[i].targetLink.end(); it++) {
 			double weight = 0;
 			auto it2 = brain[i].targetSign.find(*it);
@@ -119,7 +119,7 @@ void brat::output_iterate()
 		output[i].sum = 0;
 	}
 
-	for (auto i = 0; i < output.size; i++) {
+	for (auto i = 0; i < output.size(); i++) {
 		for (auto it = output[i].targetLink.begin(); it != output[i].targetLink.end(); it++) {
 			double weight = 0;
 			auto it2 = brain[i].targetSign.find(*it);
