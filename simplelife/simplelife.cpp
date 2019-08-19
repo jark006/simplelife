@@ -1,8 +1,9 @@
 ﻿// simplelife.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
 //
 
-#include "pch.h"
+
 #include "brain.h"
+#include "sha1.h"
 #include <iostream>
 #include <iomanip>
 
@@ -13,7 +14,7 @@ int main()
 	vector<double> input = { 1, 6 ,9, };
 	vector<double> output(2);
 	
-	brain mybrain(input.size(), 200, output.size(), 0);
+	brain mybrain(input.size(), 302, output.size(), 0);
 	//brain mybrain("brain.bin");
 
 	//mybrain.printLink();

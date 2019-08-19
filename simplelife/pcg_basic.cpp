@@ -27,7 +27,7 @@
  * has many additional features and is preferable if you can use C++ in
  * your project.
  */
-#include "pch.h"
+
 #include "pcg_basic.h"
 
 // state for global RNGs
