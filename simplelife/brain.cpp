@@ -16,90 +16,93 @@ inline double brain::myRand_1to1()
 	return ((int)(pcg32_random_r(&rng) & 0xffff) - 0x7fff) / ((double)0x7fff);
 }
 
-brain::brain()
-{
-	brain(2, 20, 1, 0);
-}
 
-brain::brain(string filename)
+brain::brain(string filePath)
 {
-	pcg32_srandom_r(&rng, time(NULL) ^ (intptr_t)&printf,
-		(intptr_t)&printf);
+	auto t1 = time(nullptr);
 
+	pcg32_srandom_r(&rng, time(NULL) ^ (intptr_t)& printf,
+		(intptr_t)& printf);
+
+	uint32_t heardInfo[16] = { 0 };
 	uint32_t temp;
 	uint32_t temp2;
 	double temp_double;
 	uint32_t input_num, neuralNode, output_num;
 
-	cout << "Load brain from file: \"" << filename << '\"' << endl;
-	ifstream f(filename, ios::binary);
+	cout << "Load brain from file: \"" << filePath << '\"' << endl;
+	ifstream f(filePath, ios::binary);
 	if (!f)
 	{
 		cout << "Fail to read file!" << endl;
 		exit(-1);
 	}
 
-	f.read((char*)&input_num, sizeof(uint32_t));
-	f.read((char*)&neuralNode, sizeof(uint32_t));
-	f.read((char*)&output_num, sizeof(uint32_t));
-	f.read((char*)&temp, sizeof(uint32_t));
+	f.read((char*)& heardInfo, sizeof(heardInfo) / sizeof(heardInfo[0]));
+
+	input_num = heardInfo[0];
+	neuralNode = heardInfo[1];
+	output_num = heardInfo[2];
+	score = heardInfo[3];
 
 	cout << "InputSize: " << input_num << endl;
 	cout << "neuralSize: " << neuralNode << endl;
 	cout << "OutputSize: " << output_num << endl;
 
-	input.resize(input_num);
-	neural.resize(neuralNode);
-	output.resize(output_num);
-	score = temp;
+	inputNode.resize(input_num);
+	hideNode.resize(neuralNode);
+	outputNode.resize(output_num);
 
-	linkCnt = 0;
-	for (auto i = 0; i < input.size(); i++) {
-		f.read((char*)&temp, sizeof(uint32_t));
+	link_Count = 0;
+	for (auto i = 0; i < inputNode.size(); i++) {
+		f.read((char*)& temp_double, sizeof(double));
+		inputNode[i].sum = temp_double;
+		f.read((char*)& temp, sizeof(uint32_t));
 		while (temp--)
 		{
-			f.read((char*)&temp2, sizeof(int));
-			f.read((char*)&temp_double, sizeof(double));
-
-			input[i].targetLink.insert(temp2);
-			input[i].targetWeight.insert(pair<uint32_t, double>(temp2, temp_double)); 
-			linkCnt++;
+			f.read((char*)& temp2, sizeof(int));
+			f.read((char*)& temp_double, sizeof(double));
+			inputNode[i].target.push_back(pair<uint32_t, double>(temp2, temp_double));
+			link_Count++;
 		}
 	}
-	for (auto i = 0; i < neural.size(); i++) {
-		f.read((char*)&temp, sizeof(uint32_t));
+	for (auto i = 0; i < hideNode.size(); i++) {
+		f.read((char*)& temp_double, sizeof(double));
+		hideNode[i].sum = temp_double;
+		f.read((char*)& temp, sizeof(uint32_t));
 		while (temp--)
 		{
-			f.read((char*)&temp2, sizeof(uint32_t));
-			f.read((char*)&temp_double, sizeof(double));
-
-			neural[i].targetLink.insert(temp2);
-			neural[i].targetWeight.insert(pair<int, double>(temp2, temp_double));
-			linkCnt++;
+			f.read((char*)& temp2, sizeof(uint32_t));
+			f.read((char*)& temp_double, sizeof(double));
+			hideNode[i].target.push_back(pair<uint32_t, double>(temp2, temp_double));
+			link_Count++;
 		}
 	}
-	for (auto i = 0; i < output.size(); i++) {
-		f.read((char*)&temp, sizeof(uint32_t));
+	for (auto i = 0; i < outputNode.size(); i++) {
+		f.read((char*)& temp_double, sizeof(double));
+		outputNode[i].sum = temp_double;
+		f.read((char*)& temp, sizeof(uint32_t));
 		while (temp--)
 		{
-			f.read((char*)&temp2, sizeof(uint32_t));
-			f.read((char*)&temp_double, sizeof(double));
-
-			output[i].targetLink.insert(temp2);
-			output[i].targetWeight.insert(pair<int, double>(temp2, temp_double));
-			linkCnt++;
+			f.read((char*)& temp2, sizeof(uint32_t));
+			f.read((char*)& temp_double, sizeof(double));
+			outputNode[i].target.push_back(pair<uint32_t, double>(temp2, temp_double));
+			link_Count++;
 		}
 	}
 	f.close();
-	cout << "LinkNum:" << linkCnt << endl;
-	cout << "Load over." << endl << endl;
+	cout << "LinkNum:" << link_Count << endl;
+	cout << "Load over." <<  endl;
+	cout << "Time use:" << time(nullptr) - t1 << endl << endl;
 }
 
 brain::brain(uint32_t input_num, uint32_t neuralNode, uint32_t output_num, uint32_t _score)
 {
+	auto t1 = time(nullptr);
+	set<uint32_t> targetLink;
 
-	pcg32_srandom_r(&rng, time(NULL) ^ (intptr_t)&printf,
-		(intptr_t)&printf);
+	pcg32_srandom_r(&rng, time(NULL) ^ (intptr_t)& printf,
+		(intptr_t)& printf);
 
 	cout << "Cread brain by random neural link." << endl;
 
@@ -109,268 +112,259 @@ brain::brain(uint32_t input_num, uint32_t neuralNode, uint32_t output_num, uint3
 
 
 
-	input.resize(input_num);
-	neural.resize(neuralNode);
-	output.resize(output_num);
+	inputNode.resize(input_num);
+	hideNode.resize(neuralNode);
+	outputNode.resize(output_num);
 	score = _score;
 
-	linkCnt = 0;
-	for (auto i = 0; i < input_num; i++) {
-		int linkNum = myRand() % (int)(input2nodeMax * neuralNode);
+	link_Count = 0;
+	for (uint32_t i = 0; i < input_num; i++) {
+		int linkNum = myRand() % (int)(input2hideMax * neuralNode);
 		if (linkNum == 0)
 			linkNum = 1;
+		targetLink.clear();
 		while (linkNum--) {
 			auto target = myRand() % neuralNode;
-			double weight = myRand_1to1();
 			if (target == i) {
 				linkNum++;
 				continue;
 			}
-			input[i].targetLink.insert(target);
-			input[i].targetWeight.insert(pair<uint32_t, double>(target, weight));
-			linkCnt++;
+			targetLink.insert(target);
+			link_Count++;
+		}
+		for (auto it = targetLink.begin(); it != targetLink.end(); it++) {
+			inputNode[i].target.push_back(pair<uint32_t, double>(*it, myRand_1to1()));
 		}
 	}
 
-	for (auto i = 0; i < neuralNode; i++) {
-		int linkNum = myRand() % (int)(node2nodeMax * neuralNode);
+	for (uint32_t i = 0; i < neuralNode; i++) {
+		int linkNum = myRand() % (int)(hide2hideMax * neuralNode);
 		if (linkNum == 0)
 			linkNum = 1;
+		targetLink.clear();
 		while (linkNum--) {
 			auto target = myRand() % neuralNode;
-			double weight = myRand_1to1();
 			if (target == i) {
 				linkNum++;
 				continue;
 			}
-			neural[i].targetLink.insert(target);
-			neural[i].targetWeight.insert(pair<uint32_t, double>(target, weight));
-			linkCnt++;
+			targetLink.insert(target);
+			link_Count++;
 		}
-		neural[i].bias = myRand_1to1();
-		neural[i].sum = myRand_1to1();
-		neural[i].out = sigmod(neural[i].sum);
+
+		for (auto it = targetLink.begin(); it != targetLink.end(); it++) {
+			hideNode[i].target.push_back(pair<uint32_t, double>(*it, myRand_1to1()));
+		}
+
+		hideNode[i].bias = myRand_1to1();
+		hideNode[i].sum = myRand_1to1();
+		hideNode[i].out = sigmod(hideNode[i].sum);
 	}
 
-	for (auto i = 0; i < output_num; i++) {
-		int linkNum = myRand() % (int)(node2outputMax * neuralNode);
+
+	for (uint32_t i = 0; i < output_num; i++) {
+		int linkNum = myRand() % (int)(hide2outputMax * neuralNode);
 		if (linkNum == 0)
 			linkNum = 1;
+		targetLink.clear();
 		while (linkNum--) {
 			auto target = myRand() % neuralNode;
-			double weight = myRand_1to1();
 			if (target == i) {
 				linkNum++;
 				continue;
 			}
-			output[i].targetLink.insert(target);
-			output[i].targetWeight.insert(pair<uint32_t, double>(target, weight));
-			linkCnt++;
+			targetLink.insert(target);
+			link_Count++;
+		}
+		for (auto it = targetLink.begin(); it != targetLink.end(); it++) {
+			outputNode[i].target.push_back(pair<uint32_t, double>(*it, myRand_1to1()));
 		}
 	}
-	cout << "LinkNum:" << linkCnt << endl;
-	cout << "Cread over." << endl << endl;
+	cout << "LinkNum:" << link_Count << endl;
+	cout << "Cread over." << endl;
+	cout << "Time use:" << time(nullptr) - t1 << endl << endl;
 }
 
 brain::~brain()
 {
 }
 
-void brain::input_iterate(vector<double>& _input)
+void brain::input_iterate(vector<double>& input)
 {
-	if (_input.size() < input.size())
+	if (input.size() < inputNode.size())
 	{
 		cerr << "InputNum ERROR!" << endl;
 		exit(-1);
 	}
-	for (auto i = 0; i < input.size(); i++) {
-		input[i].sum = _input[i];
-		input[i].out = sigmod(input[i].sum);
+	for (auto i = 0; i < inputNode.size(); i++) {
+		inputNode[i].sum = input[i];
+		inputNode[i].out = sigmod(inputNode[i].sum);
 	}
 
-	for (auto i = 0; i < neural.size(); i++)
+	for (auto& h : hideNode)
 	{
-		neural[i].sum_in = 0;
+		h.sum_in = 0;
 	}
 
-	for (auto i = 0; i < input.size(); i++) {
-		for (auto it = input[i].targetLink.begin(); it != input[i].targetLink.end(); it++) {
-			double weight = 0;
-			auto it2 = input[i].targetWeight.find(*it);
-			if (it2 != input[i].targetWeight.end())
-				weight = it2->second;
-			neural[*it].sum_in += (input[i].out * weight);
-		}
-	}
+	for (auto i:inputNode)
+		for (auto t:i.target)
+			hideNode[t.first].sum_in += (i.out * t.second);
 }
 
 void brain::brain_iterate()
-{	
-	for (auto i=0; i < neural.size(); i++)
+{
+	//valueKeep
+	for (auto& h : hideNode)
 	{
-		neural[i].out = sigmod(neural[i].bias + neural[i].sum + neural[i].sum_in);
-		neural[i].sum = 0;
+		h.out = sigmod(h.bias + h.sum + h.sum_in);
+		h.sum_old = h.sum;
+		h.sum = 0;
 	}
 
-	for (auto i = 0; i < neural.size(); i++) {
-		for (auto it = neural[i].targetLink.begin(); it != neural[i].targetLink.end(); it++) {
-			double weight = 0;
-			auto it2 = neural[i].targetWeight.find(*it);
-			if (it2 != neural[i].targetWeight.end())
-				weight = it2->second;
-			neural[*it].sum += (neural[i].out * weight);
+	for (auto& h : hideNode) {
+		for (auto t : h.target)
+		{
+			hideNode[t.first].sum += (h.out * t.second);
 		}
 	}
 
+	for (auto& h : hideNode)
+	{
+		h.sum = h.sum_old * valueKeep + h.sum * (1.0 - valueKeep);
+	}
 }
 
-void brain::output_iterate(vector<double>& _output)
+void brain::output_iterate(vector<double>& output)
 {
-	for (auto i = 0; i < output.size(); i++)
-	{
-		output[i].sum = 0;
-	}
+	for (auto& o : outputNode)
+		o.sum = 0;
 
-	for (auto i = 0; i < output.size(); i++) {
-		for (auto it = output[i].targetLink.begin(); it != output[i].targetLink.end(); it++) {
-			double weight = 0;
-			auto it2 = neural[i].targetWeight.find(*it);
-			if (it2 != neural[i].targetWeight.end())
-				weight = it2->second;
-			output[i].sum += (neural[*it].out * weight);
+	for (auto& o : outputNode) {
+		for (auto t : o.target) {
+			o.sum += (hideNode[t.first].out * t.second);
 		}
+		o.out = sigmod(o.sum);
 	}
-
-	for (auto i = 0; i < output.size(); i++)
-	{
-		output[i].out = sigmod(output[i].sum);
-		_output[i] = output[i].out;
-	}
+	for (auto i = 0; i < outputNode.size(); i++)
+		output[i] = outputNode[i].out;
 }
 
 void brain::printLink()
 {
-	for (auto i = 0; i < input.size(); i++) {
-		cout << "input[" << i << "]:";
-		for (auto it = input[i].targetLink.begin(); it != input[i].targetLink.end(); it++) {
-			cout << *it << ' ';
+	int num = 0;
+	for (auto i:inputNode) {
+		cout << "input[" << num++ << "](" << i.out << "):";
+		for (auto j:i.target) {
+			cout << j.first << ' '; 
+			//cout << j.first << '&' << j.second << ' ';
 		}
 		cout << endl;
 	}
 	cout << endl;
-	for (auto i = 0; i < neural.size(); i++) {
-		cout << "neural[" << i << "]:";
-		for (auto it = neural[i].targetLink.begin(); it != neural[i].targetLink.end(); it++) {
-			cout << *it << ' ';
-		}
-		cout << endl;
-	}
-	cout << endl;
-	for (auto i = 0; i < output.size(); i++) {
-		cout << "output[" << i << "]:";
-		for (auto it = output[i].targetLink.begin(); it != output[i].targetLink.end(); it++) {
-			cout << *it << ' ';
-		}
-		cout << endl;
-	}
 
+	num = 0;
+	for (auto h:hideNode) {
+		cout << "neural[" << num++ << "](" << h.out << "):";
+		for (auto j : h.target) {
+			cout << j.first << ' ';
+		}
+		cout << endl;
+	}
+	cout << endl;
+
+	num = 0;
+	for (auto o:outputNode) {
+		cout << "output[" << num++ << "](" << o.out << "):";
+		for (auto j : o.target) {
+			cout << j.first  << ' ';
+		}
+		cout << endl;
+	}
+	cout << endl;
 }
 
 void brain::reRandomWeight()
 {
-	for (auto i = 0; i < input.size(); i++) {
-		for (auto it = input[i].targetWeight.begin(); it != input[i].targetWeight.end(); it++) {
-			it->second = myRand_1to1();
+	for (auto i : inputNode) {
+		for (auto j : i.target) {
+			j.second = myRand_1to1();
 		}
 	}
 
-	for (auto i = 0; i < neural.size(); i++) {
-		for (auto it = neural[i].targetWeight.begin(); it != neural[i].targetWeight.end(); it++) {
-			it->second = myRand_1to1();
+	for (auto n : hideNode) {
+		for (auto j : n.target) {
+			j.second = myRand_1to1();
 		}
-		neural[i].bias = myRand_1to1();
-		neural[i].sum = myRand_1to1();
-		neural[i].out = sigmod(neural[i].sum);
+		n.bias = myRand_1to1();
+		n.sum = myRand_1to1();
+		n.out = sigmod(n.sum);
 	}
 
-	for (auto i = 0; i < output.size(); i++) {
-		for (auto it = output[i].targetWeight.begin(); it != output[i].targetWeight.end(); it++) {
-			it->second = myRand_1to1();
+	for (auto o : outputNode) {
+		for (auto j : o.target) {
+			j.second = myRand_1to1();
 		}
 	}
 }
 
-void brain::saveBrain(string filename)
+void brain::saveBrain(string filePath)
 {
 	uint32_t temp;
+	uint32_t heardInfo[16] = { 0 };
 	double temp_double;
-	ofstream f(filename, ios::binary);
+
+	ofstream f(filePath, ios::binary);
 	if (!f)
 	{
 		cerr << "Save brain faile, outputfile error!" << endl;
 		return;
 	}
-	temp = input.size();
-	f.write((char*)&temp, sizeof(uint32_t));
-	temp = neural.size();
-	f.write((char*)&temp, sizeof(uint32_t));
-	temp = output.size();
-	f.write((char*)&temp, sizeof(uint32_t));
-	temp = score;
-	f.write((char*)&temp, sizeof(uint32_t));
 
-	
-	for (auto i = 0; i < input.size(); i++) {
-		temp = input[i].targetLink.size();
-		f.write((char*)&temp, sizeof(uint32_t));
-		for (auto it = input[i].targetLink.begin(); it != input[i].targetLink.end(); it++) {
-			double weight = 0;
-			auto it2 = input[i].targetWeight.find(*it);
-			if (it2 != input[i].targetWeight.end())
-				weight = it2->second;
+	heardInfo[0] = inputNode.size();
+	heardInfo[1] = hideNode.size();
+	heardInfo[2] = outputNode.size();
+	heardInfo[3] = score;
 
-			temp = *it;
-			temp_double = weight;
+	f.write((char*)& heardInfo, sizeof(heardInfo) / sizeof(heardInfo[0]));
 
-			f.write((char*)&temp, sizeof(uint32_t));
-			f.write((char*)&temp_double, sizeof(double));
+	for (auto i : inputNode) {
+		temp_double = i.sum;
+		temp = i.target.size();
+		f.write((char*)& temp_double, sizeof(double));
+		f.write((char*)& temp, sizeof(uint32_t));
+		for (auto j : i.target) {
+			temp = j.first;
+			temp_double = j.second;
+			f.write((char*)& temp, sizeof(uint32_t));
+			f.write((char*)& temp_double, sizeof(double));
 		}
 	}
 
-	for (auto i = 0; i < neural.size(); i++) {
-		temp = neural[i].targetLink.size();
-		f.write((char*)&temp, sizeof(uint32_t));
-		for (auto it = neural[i].targetLink.begin(); it != neural[i].targetLink.end(); it++) {
-			double weight = 0;
-			auto it2 = neural[i].targetWeight.find(*it);
-			if (it2 != neural[i].targetWeight.end())
-				weight = it2->second;
-
-			temp = *it;
-			temp_double = weight;
-
-			f.write((char*)&temp, sizeof(uint32_t));
-			f.write((char*)&temp_double, sizeof(double));
+	for (auto h : hideNode) {
+		temp_double = h.sum;
+		temp = h.target.size();
+		f.write((char*)& temp_double, sizeof(double));
+		f.write((char*)& temp, sizeof(uint32_t));
+		for (auto j : h.target) {
+			temp = j.first;
+			temp_double = j.second;
+			f.write((char*)& temp, sizeof(uint32_t));
+			f.write((char*)& temp_double, sizeof(double));
 		}
 	}
 
-	for (auto i = 0; i < output.size(); i++) {
-		temp = output[i].targetLink.size();
-		f.write((char*)&temp, sizeof(uint32_t));
-		for (auto it = output[i].targetLink.begin(); it != output[i].targetLink.end(); it++) {
-			double weight = 0;
-			auto it2 = output[i].targetWeight.find(*it);
-			if (it2 != output[i].targetWeight.end())
-				weight = it2->second;
-
-			temp = *it;
-			temp_double = weight;
-
-			f.write((char*)&temp, sizeof(uint32_t));
-			f.write((char*)&temp_double, sizeof(double));
+	for (auto o : outputNode) {
+		temp_double = o.sum;
+		temp = o.target.size();
+		f.write((char*)& temp_double, sizeof(double));
+		f.write((char*)& temp, sizeof(uint32_t));
+		for (auto j : o.target) {
+			temp = j.first;
+			temp_double = j.second;
+			f.write((char*)& temp, sizeof(uint32_t));
+			f.write((char*)& temp_double, sizeof(double));
 		}
 	}
-
 
 	f.close();
 }
