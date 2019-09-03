@@ -151,11 +151,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="body.h" />
     <ClInclude Include="brain.h" />
     <ClInclude Include="pcg_basic.h" />
     <ClInclude Include="sha1.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="body.cpp" />
     <ClCompile Include="brain.cpp" />
     <ClCompile Include="pcg_basic.cpp" />
     <ClCompile Include="sha1.cpp" />

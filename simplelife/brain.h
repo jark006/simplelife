@@ -9,7 +9,8 @@
 #include<string>
 #include<set>
 #include<map>
-#include <fstream>
+#include<iomanip>
+#include<fstream>
 #include "pcg_basic.h"
 
 
@@ -24,14 +25,14 @@ struct node
 	double sum = 0;
 	double sum_old = 0;
 	double out = 0;
-	vector<pair<uint32_t, double>> target;
+	vector<pair<uint64_t, double>> target;
 };
-class brain
+class Brain
 {
 public:
-	brain(string filePath);
-	brain(uint32_t input_num, uint32_t neuralNode, uint32_t out_num, uint32_t _score);
-	~brain();
+	Brain(string filePath);
+	Brain(uint64_t input_num, uint64_t neuralNode, uint64_t out_num, uint64_t _score);
+	~Brain();
 
 	void input_iterate(vector<double>& input);
 	void brain_iterate();
@@ -47,8 +48,8 @@ public:
 	vector<node> hideNode;
 	vector<node> outputNode;
 
-	uint32_t link_Count = 0;
-	uint32_t score = 0;
+	uint64_t link_Count = 0;
+	uint64_t score = 0;
 	pcg32_random_t rng;
 
 	//以下几个数值凭感觉来的

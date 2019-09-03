@@ -11,6 +11,7 @@
 #include<set>
 #include<map>
 #include <fstream>
+#include <windows.h>
 
 using namespace std;
 
@@ -46,19 +47,36 @@ int main()
 	//cout << time(nullptr) - t1 << endl;
 
 
-	int y = 0;
-	vector<int> aa(10);
-	for (auto i : aa)
-	{
-		cout << i;
-	}
-	for (auto i : aa)
-	{
-		i = 66;
-	}
-	for (auto i : aa)
-	{
-		cout << i;
+	//int y = 0;
+	//vector<int> aa(10);
+	//for (auto i : aa)
+	//{
+	//	cout << i;
+	//}
+	//for (auto i : aa)
+	//{
+	//	i = 66;
+	//}
+	//for (auto i : aa)
+	//{
+	//	cout << i;
+	//}
+
+	int p = 0;
+	int len = 25;
+	for (int i = 0; i <= 100; i++) {
+
+		cout << "\r[";
+		for (int j = 0; j < len; j++) {
+			if (j < (len * i / 100))
+				cout << '=';
+			else if (j == (len * i / 100))
+				cout << '>';
+			else
+				cout << ' ';
+		}
+		cout << "]" << i << "%";
+		Sleep(100);
 	}
 
 }

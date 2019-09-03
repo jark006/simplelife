@@ -14,8 +14,8 @@ int main()
 	vector<double> input = { 1, 6 ,9, };
 	vector<double> output = { 5, 4 ,3, };
 	
-	brain mybrain(input.size(), 5000, output.size(), 0);
-	//brain mybrain("brain_1567174522.bin");
+	Brain mybrain(input.size(), 10000, output.size(), 0);
+	//Brain mybrain("brain_1567538537.bin");
 	
 	
 	//mybrain.brain_iterate();
@@ -37,8 +37,8 @@ int main()
 			}
 			cout << endl;
 		}
-		cout << "iterating... " << time(NULL) << endl << endl;
-		mybrain.reRandomWeight();
+		cout << "iterating... " << time(nullptr) << endl << endl;
+		//mybrain.reRandomWeight();
 	}
 
 	//cout << endl;
@@ -52,13 +52,13 @@ int main()
 
 
 
-	cout << "Do you want to save the brain(y/n)? : ";
+	cout << "Do you want to save the brain(y/n)? ";
 	char c;
 	cin >> c;
 	if (c == 'Y' || c == 'y')
 	{
 		cout << endl << "Saving..." << endl;
-		string filename = "brain_" + to_string(time(NULL)) + ".bin";
+		string filename = "brain_" + to_string(time(nullptr)) + ".bin";
 		mybrain.saveBrain(filename);
 		cout << "File \"" << filename << "\" saved!" << endl;
 	}
