@@ -20,9 +20,6 @@
 Brain::Brain(string filePath)
 {
 	auto t1 = time(nullptr);
-
-	
-
 	uint64_t heardInfo[16] = { 0 };
 	uint64_t temp;
 	uint64_t temp2;
@@ -53,39 +50,39 @@ Brain::Brain(string filePath)
 	outputNode.resize(output_num);
 
 	link_Count = 0;
-	for (auto i = 0; i < inputNode.size(); i++) {
+	for (auto& i:inputNode) {
 		f.read((char*)& temp_double, sizeof(double));
-		inputNode[i].sum = temp_double;
+		i.sum = temp_double;
 		f.read((char*)& temp, sizeof(uint64_t));
 		while (temp--)
 		{
 			f.read((char*)& temp2, sizeof(uint64_t));
 			f.read((char*)& temp_double, sizeof(double));
-			inputNode[i].target.push_back(pair<uint64_t, double>(temp2, temp_double));
+			i.target.push_back(pair<uint64_t, double>(temp2, temp_double));
 			link_Count++;
 		}
 	}
-	for (auto i = 0; i < hideNode.size(); i++) {
+	for (auto& h:hideNode) {
 		f.read((char*)& temp_double, sizeof(double));
-		hideNode[i].sum = temp_double;
+		h.sum = temp_double;
 		f.read((char*)& temp, sizeof(uint64_t));
 		while (temp--)
 		{
 			f.read((char*)& temp2, sizeof(uint64_t));
 			f.read((char*)& temp_double, sizeof(double));
-			hideNode[i].target.push_back(pair<uint64_t, double>(temp2, temp_double));
+			h.target.push_back(pair<uint64_t, double>(temp2, temp_double));
 			link_Count++;
 		}
 	}
-	for (auto i = 0; i < outputNode.size(); i++) {
+	for (auto& o:outputNode) {
 		f.read((char*)& temp_double, sizeof(double));
-		outputNode[i].sum = temp_double;
+		o.sum = temp_double;
 		f.read((char*)& temp, sizeof(uint64_t));
 		while (temp--)
 		{
 			f.read((char*)& temp2, sizeof(uint64_t));
 			f.read((char*)& temp_double, sizeof(double));
-			outputNode[i].target.push_back(pair<uint64_t, double>(temp2, temp_double));
+			o.target.push_back(pair<uint64_t, double>(temp2, temp_double));
 			link_Count++;
 		}
 	}
@@ -154,7 +151,7 @@ Brain::Brain(uint64_t input_num, uint64_t neuralNode, uint64_t output_num, uint6
 
 		hideNode[i].bias = myRand_1to1();
 		hideNode[i].sum = myRand_1to1();
-		hideNode[i].out = sigmod(hideNode[i].sum);
+		hideNode[i].out = sigmod(hideNode[i].sum + hideNode[i].sum_in + hideNode[i].bias);
 	}
 
 
@@ -235,17 +232,12 @@ void Brain::brain_iterate()
 		h.sum = 0;
 	}
 
-	for (auto& h : hideNode) {
+	for (auto h : hideNode) 
 		for (auto t : h.target)
-		{
 			hideNode[t.first].sum += (h.out * t.second);
-		}
-	}
 
 	for (auto& h : hideNode)
-	{
 		h.sum = h.sum_old * valueKeep + h.sum * (1.0 - valueKeep);
-	}
 }
 
 void Brain::output_iterate(vector<double>& output)
@@ -299,11 +291,9 @@ void Brain::printLink()
 
 void Brain::reRandomWeight()
 {
-	for (auto i : inputNode) {
-		for (auto j : i.target) {
+	for (auto i : inputNode) 
+		for (auto j : i.target) 
 			j.second = myRand_1to1();
-		}
-	}
 
 	for (auto n : hideNode) {
 		for (auto j : n.target) {
@@ -314,11 +304,9 @@ void Brain::reRandomWeight()
 		n.out = sigmod(n.sum);
 	}
 
-	for (auto o : outputNode) {
-		for (auto j : o.target) {
+	for (auto o : outputNode) 
+		for (auto j : o.target) 
 			j.second = myRand_1to1();
-		}
-	}
 }
 
 void Brain::saveBrain(string filePath)
