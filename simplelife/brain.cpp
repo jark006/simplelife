@@ -258,10 +258,10 @@ void Brain::output_iterate(vector<double>& output)
 void Brain::printLink()
 {
 	int num = 0;
-	for (auto i:inputNode) {
+	for (auto i : inputNode) {
 		cout << "input[" << num++ << "](" << i.out << "):";
-		for (auto j:i.target) {
-			cout << j.first << ' '; 
+		for (auto t : i.target) {
+			cout << t.first << ' ';
 			//cout << j.first << '&' << j.second << ' ';
 		}
 		cout << endl;
@@ -269,20 +269,20 @@ void Brain::printLink()
 	cout << endl;
 
 	num = 0;
-	for (auto h:hideNode) {
-		cout << "neural[" << num++ << "](" << h.out << "):";
-		for (auto j : h.target) {
-			cout << j.first << ' ';
+	for (auto h : hideNode) {
+		cout << "hideNode[" << num++ << "](" << h.out << "):";
+		for (auto t : h.target) {
+			cout << t.first << ' ';
 		}
 		cout << endl;
 	}
 	cout << endl;
 
 	num = 0;
-	for (auto o:outputNode) {
+	for (auto o : outputNode) {
 		cout << "output[" << num++ << "](" << o.out << "):";
-		for (auto j : o.target) {
-			cout << j.first  << ' ';
+		for (auto t : o.target) {
+			cout << t.first << ' ';
 		}
 		cout << endl;
 	}
@@ -291,22 +291,22 @@ void Brain::printLink()
 
 void Brain::reRandomWeight()
 {
-	for (auto i : inputNode) 
-		for (auto j : i.target) 
-			j.second = myRand_1to1();
+	for (auto& i : inputNode) 
+		for (auto& t : i.target) 
+			t.second = myRand_1to1();
 
-	for (auto n : hideNode) {
-		for (auto j : n.target) {
-			j.second = myRand_1to1();
+	for (auto& h : hideNode) {
+		for (auto& t : h.target) {
+			t.second = myRand_1to1();
 		}
-		n.bias = myRand_1to1();
-		n.sum = myRand_1to1();
-		n.out = sigmod(n.sum);
+		h.bias = myRand_1to1();
+		h.sum = myRand_1to1();
+		h.out = sigmod(h.sum);
 	}
 
-	for (auto o : outputNode) 
-		for (auto j : o.target) 
-			j.second = myRand_1to1();
+	for (auto& o : outputNode) 
+		for (auto& t : o.target) 
+			t.second = myRand_1to1();
 }
 
 void Brain::saveBrain(string filePath)
@@ -337,9 +337,9 @@ void Brain::saveBrain(string filePath)
 		temp = i.target.size();
 		f.write((char*)& temp_double, sizeof(double));
 		f.write((char*)& temp, sizeof(uint64_t));
-		for (auto j : i.target) {
-			temp = j.first;
-			temp_double = j.second;
+		for (auto t : i.target) {
+			temp = t.first;
+			temp_double = t.second;
 			f.write((char*)& temp, sizeof(uint64_t));
 			f.write((char*)& temp_double, sizeof(double));
 			link++;
@@ -356,9 +356,9 @@ void Brain::saveBrain(string filePath)
 		temp = h.target.size();
 		f.write((char*)& temp_double, sizeof(double));
 		f.write((char*)& temp, sizeof(uint64_t));
-		for (auto j : h.target) {
-			temp = j.first;
-			temp_double = j.second;
+		for (auto t : h.target) {
+			temp = t.first;
+			temp_double = t.second;
 			f.write((char*)& temp, sizeof(uint64_t));
 			f.write((char*)& temp_double, sizeof(double));
 			link++;
@@ -375,9 +375,9 @@ void Brain::saveBrain(string filePath)
 		temp = o.target.size();
 		f.write((char*)& temp_double, sizeof(double));
 		f.write((char*)& temp, sizeof(uint64_t));
-		for (auto j : o.target) {
-			temp = j.first;
-			temp_double = j.second;
+		for (auto t : o.target) {
+			temp = t.first;
+			temp_double = t.second;
 			f.write((char*)& temp, sizeof(uint64_t));
 			f.write((char*)& temp_double, sizeof(double));
 			link++;
