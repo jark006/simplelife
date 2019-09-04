@@ -12,11 +12,17 @@
 #include<iomanip>
 #include<fstream>
 #include "pcg_basic.h"
-
+#include "utils.h"
 
 using namespace std;
 
-//enum brainType { STRUCT_ONLY = 0, FULL_BRAIN = 1, };
+//变异类型
+enum variationType { 
+	HIDE_NODE_CHANGE, //隐藏节点增减
+	LINK_CHANGE,      //连接目标增减
+	WEIGHT_CHANGE,    //权重增减
+
+};
 
 struct node
 {
@@ -32,13 +38,14 @@ class Brain
 public:
 	Brain(string filePath);
 	Brain(uint64_t input_num, uint64_t neuralNode, uint64_t out_num, uint64_t _score);
+	//Brain(Brain& parentBrain, variationType v_type, double ratio);
 	~Brain();
 
 	void input_iterate(vector<double>& input);
 	void brain_iterate();
 	void output_iterate(vector<double>& output);
-	inline uint32_t myRand();
-	inline double myRand_1to1();
+	//inline uint32_t myRand();
+	//inline double myRand_1to1();
 	void printLink();
 
 	void reRandomWeight();
@@ -50,7 +57,7 @@ public:
 
 	uint64_t link_Count = 0;
 	uint64_t score = 0;
-	pcg32_random_t rng;
+	//pcg32_random_t rng;
 
 	//以下几个数值凭感觉来的
 	const double valueKeep = 1.0 - 0.618; //隐藏节点每次迭代保留的原权值百分比 node.newSum = node.oldSum*0.xx + sumFromOthers*(1-0.xx);
@@ -60,7 +67,7 @@ public:
 	const double hide2outputMax = 0.15; //每个输出最多连接隐藏节点的百分比
 
 private:
-	inline double sigmod(double in);
+	//inline double sigmod(double in);
 	
 };
 

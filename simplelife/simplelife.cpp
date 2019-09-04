@@ -4,12 +4,14 @@
 
 #include "brain.h"
 #include "sha1.h"
+#include "utils.h"
 #include <iostream>
 #include <iomanip>
 
 int main()
 {
-	srand((uint32_t)time(nullptr));
+	//srand((uint32_t)time(nullptr));
+	mySrand();
 
 	vector<double> input = { 1, 6 ,9, };
 	vector<double> output = { 5, 4 ,3, };

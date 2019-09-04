@@ -1,28 +1,27 @@
 
 #include "brain.h"
 
-inline double Brain::sigmod(double in)
-{
-	return 1.0 / (1.0 + exp(-in));
-}
-
-inline uint32_t Brain::myRand()
-{
-	return pcg32_random_r(&rng);
-}
-
-inline double Brain::myRand_1to1()
-{
-	return ((int)(pcg32_random_r(&rng) & 0xffff) - 0x7fff) / ((double)0x7fff);
-}
+//inline double Brain::sigmod(double in)
+//{
+//	return 1.0 / (1.0 + exp(-in));
+//}
+//
+//inline uint32_t Brain::myRand()
+//{
+//	return pcg32_random_r(&rng);
+//}
+//
+//inline double Brain::myRand_1to1()
+//{
+//	return ((int)(pcg32_random_r(&rng) & 0xffff) - 0x7fff) / ((double)0x7fff);
+//}
 
 
 Brain::Brain(string filePath)
 {
 	auto t1 = time(nullptr);
 
-	pcg32_srandom_r(&rng, time(NULL) ^ (intptr_t)& printf,
-		(intptr_t)& printf);
+	
 
 	uint64_t heardInfo[16] = { 0 };
 	uint64_t temp;
@@ -100,9 +99,6 @@ Brain::Brain(uint64_t input_num, uint64_t neuralNode, uint64_t output_num, uint6
 {
 	auto t1 = time(nullptr);
 	set<uint64_t> targetLink;
-
-	pcg32_srandom_r(&rng, time(NULL) ^ (intptr_t)& printf,
-		(intptr_t)& printf);
 
 	cout << "Cread brain by random neural link." << endl;
 
@@ -184,6 +180,24 @@ Brain::Brain(uint64_t input_num, uint64_t neuralNode, uint64_t output_num, uint6
 	cout << "Cread over." << endl;
 	cout << "Time use:" << time(nullptr) - t1 << endl << endl;
 }
+
+//Brain::Brain(Brain& parentBrain, variationType v_type, double ratio)
+//{
+//	switch (v_type) //TODO
+//	{
+//	case HIDE_NODE_CHANGE:
+//
+//		break;
+//	case LINK_CHANGE:
+//
+//		break;
+//	case WEIGHT_CHANGE:
+//
+//		break;
+//	default:
+//		break;
+//	}
+//}
 
 Brain::~Brain()
 {
