@@ -8,6 +8,8 @@
 #include <iostream>
 #include <iomanip>
 
+void test();
+
 int main()
 {
 	//srand((uint32_t)time(nullptr));
@@ -16,6 +18,10 @@ int main()
 	vector<double> input = { 1, 6 ,9, };
 	vector<double> output = { 5, 4 ,3, };
 	
+
+	test();
+
+
 	Brain mybrain(input.size(), 10000, output.size(), 0);
 	//Brain mybrain("brain_1567538537.bin");
 	
@@ -70,4 +76,9 @@ int main()
 
 
 
+void test() {
+	for (int i = 0; i < 100; i++)
+		cout << myRand_0to1() << endl;
+	exit(1);
+}
 

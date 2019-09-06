@@ -24,21 +24,22 @@ enum variationType {
 
 };
 
-struct node
+struct Node
 {
 	double bias = 0;
 	double sum_in = 0;
 	double sum = 0;
 	double sum_old = 0;
 	double out = 0;
-	vector<pair<uint64_t, double>> target;
+	vector<pair<uint64_t, double>> target; //目标节点及权值
+	//vector<pair<uint64_t, double>> from;   //来源节点及权值
 };
 class Brain
 {
 public:
 	Brain(string filePath);
 	Brain(uint64_t input_num, uint64_t neuralNode, uint64_t out_num, uint64_t _score);
-	//Brain(Brain& parentBrain, variationType v_type, double ratio);
+	Brain(Brain& parentBrain, variationType v_type, double ratio);
 	~Brain();
 
 	void input_iterate(vector<double>& input);
@@ -51,9 +52,9 @@ public:
 	void reRandomWeight();
 	void saveBrain(string filePath);
 
-	vector<node> inputNode;
-	vector<node> hideNode;
-	vector<node> outputNode;
+	vector<Node> inputNode;
+	vector<Node> hideNode;
+	vector<Node> outputNode;
 
 	uint64_t link_Count = 0;
 	uint64_t score = 0;

@@ -25,6 +25,11 @@ inline double myRand_1to1()
 	return ((int)(pcg32_random_r(&rng) & 0xffff) - 0x7fff) / ((double)0x7fff);
 }
 
+inline double myRand_0to1()
+{
+	return ((int)(pcg32_random_r(&rng) & 0xffff)) / ((double)0xffff);
+}
+
 //半径30的周围相对坐标，近到远排列 共2922
 // 5格及以内 < 95
 //10格及以内 < 346

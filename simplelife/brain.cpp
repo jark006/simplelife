@@ -173,28 +173,104 @@ Brain::Brain(uint64_t input_num, uint64_t neuralNode, uint64_t output_num, uint6
 		}
 		link_Count += targetLink.size();
 	}
+
 	cout << "LinkNum:" << link_Count << endl;
 	cout << "Cread over." << endl;
 	cout << "Time use:" << time(nullptr) - t1 << endl << endl;
 }
 
-//Brain::Brain(Brain& parentBrain, variationType v_type, double ratio)
-//{
-//	switch (v_type) //TODO
-//	{
-//	case HIDE_NODE_CHANGE:
-//
-//		break;
-//	case LINK_CHANGE:
-//
-//		break;
-//	case WEIGHT_CHANGE:
-//
-//		break;
-//	default:
-//		break;
-//	}
-//}
+/*
+parentBrain: 父母大脑
+variationType: 变异类型
+	HIDE_NODE_CHANGE, //隐藏节点增减 TODO 目前只增不减
+	LINK_CHANGE,      //连接目标增减
+	WEIGHT_CHANGE,    //权重增减
+ratio:变异比例
+*/
+Brain::Brain(Brain& parentBrain, variationType v_type, double ratio)
+{
+
+	inputNode.assign(parentBrain.inputNode.begin(), parentBrain.inputNode.end());
+	hideNode.assign(parentBrain.hideNode.begin(), parentBrain.hideNode.end());
+	outputNode.assign(parentBrain.outputNode.begin(), parentBrain.outputNode.end());
+	
+	score = parentBrain.score;
+	link_Count = parentBrain.link_Count;
+
+
+	Node newNode;
+	set<uint64_t> targetLink;
+
+
+	switch (v_type) //TODO
+	{
+	case HIDE_NODE_CHANGE:
+		int link_Count_temp = 0;
+		int addNum = myRand() % (int)(hideNode.size() * ratio) + 1; //新增隐藏节点数量
+		int sizeBefore = hideNode.size();
+		int sizeAfter = sizeBefore + addNum;
+		for (int i = 0; i < addNum; i++) {
+			newNode.bias = myRand_1to1();
+			newNode.sum = myRand_1to1();
+			//newNode.out = sigmod(newNode.sum + newNode.sum_in + newNode.bias);
+			hideNode.push_back(newNode);
+		}
+
+		for (auto& i : inputNode) {
+			for (auto idx = sizeBefore; idx < sizeAfter; idx++) {
+				if (myRand_0to1() < hide2hideMax)
+				{
+					i.target.push_back(pair<uint64_t, double>(idx, myRand_1to1() / 10.0));
+					link_Count_temp++;
+				}
+			}
+		}
+		for (auto idx = 0; idx < hideNode.size(); idx++) {
+			if (idx < sizeBefore) {
+				for (auto idx2 = sizeBefore; idx2 < sizeAfter; idx2++) {
+					if (myRand_0to1() < hide2hideMax)
+					{
+						hideNode[idx].target.push_back(pair<uint64_t, double>(idx2, myRand_1to1() / 10.0));
+						link_Count_temp++;
+					}
+				}
+			}
+			else {
+				for (auto idx2 = 0; idx2 < sizeBefore; idx2++) {
+					if (myRand_0to1() < hide2hideMax)
+					{
+						hideNode[idx].target.push_back(pair<uint64_t, double>(idx2, myRand_1to1() / 10.0));
+						link_Count_temp++;
+					}
+				}
+			}
+		}
+
+		for (auto& o : outputNode) {
+			for (auto idx = sizeBefore; idx < sizeAfter; idx++) {
+				if (myRand_0to1() < hide2hideMax)
+				{
+					o.target.push_back(pair<uint64_t, double>(idx, myRand_1to1() / 10.0));
+					link_Count_temp++;
+				}
+			}
+		}
+
+		link_Count += link_Count_temp;
+
+		break;
+	//case LINK_CHANGE:
+
+
+
+	//	break;
+	//case WEIGHT_CHANGE:
+
+	//	break;
+	//default:
+	//	break;
+	}
+}
 
 Brain::~Brain()
 {
