@@ -1,30 +1,15 @@
-
 #include "brain.h"
-
-//inline double Brain::sigmod(double in)
-//{
-//	return 1.0 / (1.0 + exp(-in));
-//}
-//
-//inline uint32_t Brain::myRand()
-//{
-//	return pcg32_random_r(&rng);
-//}
-//
-//inline double Brain::myRand_1to1()
-//{
-//	return ((int)(pcg32_random_r(&rng) & 0xffff) - 0x7fff) / ((double)0x7fff);
-//}
-
 
 Brain::Brain(string filePath)
 {
 	auto t1 = time(nullptr);
-	uint64_t heardInfo[16] = { 0 };
+	//uint64_t heardInfo[16] = { 0 };
+	BrainFileHeader heardInfo;
 	uint64_t temp;
 	uint64_t temp2;
+	//uint64_t id_index;
 	double temp_double;
-	uint64_t input_num, neuralNode, output_num;
+	//uint64_t input_num, neuralNode, output_num;
 
 	cout << "Load brain from file: \"" << filePath << '\"' << endl;
 	ifstream f(filePath, ios::binary);
@@ -36,23 +21,25 @@ Brain::Brain(string filePath)
 
 	f.read((char*)& heardInfo, sizeof(heardInfo));
 
-	input_num = heardInfo[0];
-	neuralNode = heardInfo[1];
-	output_num = heardInfo[2];
-	score = heardInfo[3];
 
-	cout << "InputSize: " << input_num << endl;
-	cout << "neuralSize: " << neuralNode << endl;
-	cout << "OutputSize: " << output_num << endl;
+	cout << "BrainVersion: " << heardInfo.mainVer_brain << '.' << heardInfo.subVer_brain << endl;
+	cout << "Fix to BodyVersion: " << heardInfo.mainVer_body << '.' << heardInfo.subVer_body << endl;
+	cout << "InputSize: " << heardInfo.inputNodeSize << endl;
+	cout << "InputSize: " << heardInfo.inputNodeSize << endl;
+	cout << "neuralSize: " << heardInfo.hideNodeSize << endl;
+	cout << "OutputSize: " << heardInfo.outputNodeSize << endl;
 
-	inputNode.resize(input_num);
-	hideNode.resize(neuralNode);
-	outputNode.resize(output_num);
+	inputNode.resize(heardInfo.inputNodeSize);
+	hideNode.resize(heardInfo.hideNodeSize);
+	outputNode.resize(heardInfo.outputNodeSize);
+	score = heardInfo.score;
+
 
 	link_Count = 0;
-	for (auto& i:inputNode) {
-		f.read((char*)& temp_double, sizeof(double));
-		i.sum = temp_double;
+	for (auto& i : inputNode) {
+		f.read((char*)& i.id, sizeof(uint64_t));
+		f.read((char*)& i.bias, sizeof(double));
+		f.read((char*)& i.sum, sizeof(double));
 		f.read((char*)& temp, sizeof(uint64_t));
 		while (temp--)
 		{
@@ -62,9 +49,11 @@ Brain::Brain(string filePath)
 			link_Count++;
 		}
 	}
-	for (auto& h:hideNode) {
-		f.read((char*)& temp_double, sizeof(double));
-		h.sum = temp_double;
+
+	for (auto& h : hideNode) {
+		f.read((char*)& h.id, sizeof(uint64_t));
+		f.read((char*)& h.bias, sizeof(double));
+		f.read((char*)& h.sum, sizeof(double));
 		f.read((char*)& temp, sizeof(uint64_t));
 		while (temp--)
 		{
@@ -74,9 +63,11 @@ Brain::Brain(string filePath)
 			link_Count++;
 		}
 	}
-	for (auto& o:outputNode) {
-		f.read((char*)& temp_double, sizeof(double));
-		o.sum = temp_double;
+
+	for (auto& o : outputNode) {
+		f.read((char*)& o.id, sizeof(uint64_t));
+		f.read((char*)& o.bias, sizeof(double));
+		f.read((char*)& o.sum, sizeof(double));
 		f.read((char*)& temp, sizeof(uint64_t));
 		while (temp--)
 		{
@@ -88,7 +79,7 @@ Brain::Brain(string filePath)
 	}
 	f.close();
 	cout << "LinkNum:" << link_Count << endl;
-	cout << "Load over." <<  endl;
+	cout << "Load over." << endl;
 	cout << "Time use:" << time(nullptr) - t1 << endl << endl;
 }
 
@@ -98,12 +89,9 @@ Brain::Brain(uint64_t input_num, uint64_t neuralNode, uint64_t output_num, uint6
 	set<uint64_t> targetLink;
 
 	cout << "Cread brain by random neural link." << endl;
-
 	cout << "InputSize: " << input_num << endl;
 	cout << "neuralSize: " << neuralNode << endl;
 	cout << "OutputSize: " << output_num << endl;
-
-
 
 	inputNode.resize(input_num);
 	hideNode.resize(neuralNode);
@@ -112,6 +100,7 @@ Brain::Brain(uint64_t input_num, uint64_t neuralNode, uint64_t output_num, uint6
 
 	link_Count = 0;
 	for (auto i = 0; i < input_num; i++) {
+		inputNode[i].id = i;
 		int linkNum = myRand() % (int)(input2hideMax * neuralNode);
 		if (linkNum == 0)
 			linkNum = 1;
@@ -131,6 +120,7 @@ Brain::Brain(uint64_t input_num, uint64_t neuralNode, uint64_t output_num, uint6
 	}
 
 	for (auto i = 0; i < neuralNode; i++) {
+		hideNode[i].id = i;
 		int linkNum = myRand() % (int)(hide2hideMax * neuralNode);
 		if (linkNum == 0)
 			linkNum = 1;
@@ -148,14 +138,13 @@ Brain::Brain(uint64_t input_num, uint64_t neuralNode, uint64_t output_num, uint6
 			hideNode[i].target.push_back(pair<uint64_t, double>(*it, myRand_1to1()));
 		}
 		link_Count += targetLink.size();
-
 		hideNode[i].bias = myRand_1to1();
 		hideNode[i].sum = myRand_1to1();
 		hideNode[i].out = sigmod(hideNode[i].sum + hideNode[i].sum_in + hideNode[i].bias);
 	}
 
-
 	for (auto i = 0; i < output_num; i++) {
+		outputNode[i].id = i;
 		int linkNum = myRand() % (int)(hide2outputMax * neuralNode);
 		if (linkNum == 0)
 			linkNum = 1;
@@ -182,9 +171,11 @@ Brain::Brain(uint64_t input_num, uint64_t neuralNode, uint64_t output_num, uint6
 /*
 parentBrain: 父母大脑
 variationType: 变异类型
-	HIDE_NODE_CHANGE, //隐藏节点增减 TODO 目前只增不减
-	LINK_CHANGE,      //连接目标增减
-	WEIGHT_CHANGE,    //权重增减
+	HIDE_NODE_ADD, //隐藏节点增加
+	HIDE_NODE_SUB, //隐藏节点减少 TODO
+	LINK_ADD,      //连接目标增加
+	LINK_SUB,      //连接目标减少
+	WEIGHT_CHANGE, //权重增减
 ratio:变异比例
 */
 Brain::Brain(Brain& parentBrain, variationType v_type, double ratio)
@@ -193,23 +184,29 @@ Brain::Brain(Brain& parentBrain, variationType v_type, double ratio)
 	inputNode.assign(parentBrain.inputNode.begin(), parentBrain.inputNode.end());
 	hideNode.assign(parentBrain.hideNode.begin(), parentBrain.hideNode.end());
 	outputNode.assign(parentBrain.outputNode.begin(), parentBrain.outputNode.end());
-	
+
 	score = parentBrain.score;
 	link_Count = parentBrain.link_Count;
 
-
 	Node newNode;
 	set<uint64_t> targetLink;
-
+	set<uint64_t> newLink;
+	vector<pair<uint64_t, double>> newTarget; //目标节点及权值
+	uint64_t link_Count_temp = 0;
+	uint64_t addNum;
+	uint64_t sizeBefore;
+	uint64_t sizeAfter;
 
 	switch (v_type) //TODO
 	{
-	case HIDE_NODE_CHANGE:
-		int link_Count_temp = 0;
-		int addNum = myRand() % (int)(hideNode.size() * ratio) + 1; //新增隐藏节点数量
-		int sizeBefore = hideNode.size();
-		int sizeAfter = sizeBefore + addNum;
+	case HIDE_NODE_ADD:
+	{
+		link_Count_temp = 0;
+		addNum = (uint64_t)(myRand() % (uint32_t)(hideNode.size() * ratio)) + 1; //新增隐藏节点数量
+		sizeBefore = hideNode.size();
+		sizeAfter = sizeBefore + addNum;
 		for (int i = 0; i < addNum; i++) {
+			newNode.id = sizeBefore + i;
 			newNode.bias = myRand_1to1();
 			newNode.sum = myRand_1to1();
 			//newNode.out = sigmod(newNode.sum + newNode.sum_in + newNode.bias);
@@ -259,16 +256,112 @@ Brain::Brain(Brain& parentBrain, variationType v_type, double ratio)
 		link_Count += link_Count_temp;
 
 		break;
-	//case LINK_CHANGE:
+	}
+	case LINK_ADD: //将会改变默认比例
+	{
+		for (auto& i : inputNode) {
+			targetLink.clear();
+			newLink.clear();
+
+			for (auto t : i.target)
+				targetLink.insert(t.first);
+
+			for (auto index = 0; index < hideNode.size(); index++) {
+				if (myRand_0to1() < ratio)
+					if ((targetLink.count(index) == 0) && (newLink.count(index) == 0)) {
+						newLink.insert(index);
+					}
+			}
+			for (auto n : newLink)
+				i.target.push_back(pair<uint64_t, double>(n, myRand_1to1() / 10.0));
+		}
 
 
+		for (auto& h : hideNode) {
+			targetLink.clear();
+			newLink.clear();
 
-	//	break;
-	//case WEIGHT_CHANGE:
+			for (auto t : h.target)
+				targetLink.insert(t.first);
 
-	//	break;
-	//default:
-	//	break;
+			for (auto index = 0; index < hideNode.size(); index++) {
+				if ((myRand_0to1() < ratio) && (index != h.id))
+					if ((targetLink.count(index) == 0) && (newLink.count(index) == 0)) {
+						newLink.insert(index);
+					}
+			}
+			for (auto n : newLink)
+				h.target.push_back(pair<uint64_t, double>(n, myRand_1to1() / 10.0));
+		}
+
+
+		for (auto& o : outputNode) {
+			targetLink.clear();
+			newLink.clear();
+
+			for (auto t : o.target)
+				targetLink.insert(t.first);
+
+			for (auto index = 0; index < hideNode.size(); index++) {
+				if (myRand_0to1() < ratio)
+					if ((targetLink.count(index) == 0) && (newLink.count(index) == 0)) {
+						newLink.insert(index);
+					}
+			}
+			for (auto n : newLink)
+				o.target.push_back(pair<uint64_t, double>(n, myRand_1to1() / 10.0));
+		}
+
+		break;
+	}
+	case LINK_SUB:
+	{
+		for (auto& i : inputNode) {
+			newTarget.clear();
+			for (auto t : i.target) {
+				if (myRand_0to1() > ratio) {
+					newTarget.push_back(t);
+				}
+			}
+			i.target.assign(newTarget.begin(), newTarget.end());
+		}
+
+		for (auto& h : hideNode) {
+			newTarget.clear();
+			for (auto t : h.target) {
+				if (myRand_0to1() > ratio) {
+					newTarget.push_back(t);
+				}
+			}
+			h.target.assign(newTarget.begin(), newTarget.end());
+		}
+		for (auto& o : outputNode) {
+			newTarget.clear();
+			for (auto t : o.target) {
+				if (myRand_0to1() > ratio) {
+					newTarget.push_back(t);
+				}
+			}
+			o.target.assign(newTarget.begin(), newTarget.end());
+		}
+		break;
+	}
+	case WEIGHT_CHANGE:
+	{
+		const int sign[4] = { -1, 0, 1, 0 };
+		for (auto& i : inputNode)
+			for (auto& t : i.target)
+				t.second += deltaWeight * sign[myRand() & 0x03];
+		for (auto& h : hideNode)
+			for (auto& t : h.target)
+				t.second += deltaWeight * sign[myRand() & 0x03];
+		for (auto& o : outputNode)
+			for (auto& t : o.target)
+				t.second += deltaWeight * sign[myRand() & 0x03];
+		break;
+	}
+	default:
+		break;
 	}
 }
 
@@ -285,22 +378,19 @@ void Brain::input_iterate(vector<double>& input)
 	}
 	for (auto i = 0; i < inputNode.size(); i++) {
 		inputNode[i].sum = input[i];
-		inputNode[i].out = sigmod(inputNode[i].sum);
+		inputNode[i].out = sigmod(inputNode[i].sum + inputNode[i].bias);
 	}
 
 	for (auto& h : hideNode)
-	{
 		h.sum_in = 0;
-	}
 
-	for (auto i:inputNode)
-		for (auto t:i.target)
+	for (auto i : inputNode)
+		for (auto t : i.target)
 			hideNode[t.first].sum_in += (i.out * t.second);
 }
 
 void Brain::brain_iterate()
 {
-	//valueKeep
 	for (auto& h : hideNode)
 	{
 		h.out = sigmod(h.bias + h.sum + h.sum_in);
@@ -308,10 +398,11 @@ void Brain::brain_iterate()
 		h.sum = 0;
 	}
 
-	for (auto h : hideNode) 
+	for (auto h : hideNode)
 		for (auto t : h.target)
 			hideNode[t.first].sum += (h.out * t.second);
 
+	//valueKeep
 	for (auto& h : hideNode)
 		h.sum = h.sum_old * valueKeep + h.sum * (1.0 - valueKeep);
 }
@@ -367,21 +458,21 @@ void Brain::printLink()
 
 void Brain::reRandomWeight()
 {
-	for (auto& i : inputNode) 
-		for (auto& t : i.target) 
+	for (auto& i : inputNode) {
+		i.bias = myRand_1to1();
+		for (auto& t : i.target)
 			t.second = myRand_1to1();
-
+	}
 	for (auto& h : hideNode) {
 		for (auto& t : h.target) {
 			t.second = myRand_1to1();
 		}
 		h.bias = myRand_1to1();
 		h.sum = myRand_1to1();
-		h.out = sigmod(h.sum);
 	}
 
-	for (auto& o : outputNode) 
-		for (auto& t : o.target) 
+	for (auto& o : outputNode)
+		for (auto& t : o.target)
 			t.second = myRand_1to1();
 }
 
@@ -389,7 +480,7 @@ void Brain::saveBrain(string filePath)
 {
 	uint64_t temp;
 	uint64_t heardInfo[16] = { 0 };
-	double temp_double;
+	//double temp_double;
 	uint64_t link = 0;
 	uint64_t persent = 0;
 
@@ -408,16 +499,15 @@ void Brain::saveBrain(string filePath)
 	f.write((char*)& heardInfo, sizeof(heardInfo));
 
 	cout << "0%...";
-	for (auto i : inputNode) {
-		temp_double = i.sum;
+	for (auto& i : inputNode) {
 		temp = i.target.size();
-		f.write((char*)& temp_double, sizeof(double));
+		f.write((char*)& i.id, sizeof(uint64_t));
+		f.write((char*)& i.bias, sizeof(double));
+		f.write((char*)& i.sum, sizeof(double));
 		f.write((char*)& temp, sizeof(uint64_t));
 		for (auto t : i.target) {
-			temp = t.first;
-			temp_double = t.second;
-			f.write((char*)& temp, sizeof(uint64_t));
-			f.write((char*)& temp_double, sizeof(double));
+			f.write((char*)& t.first, sizeof(uint64_t));
+			f.write((char*)& t.second, sizeof(double));
 			link++;
 			if ((int)(100 * link / link_Count) != persent)
 			{
@@ -427,16 +517,15 @@ void Brain::saveBrain(string filePath)
 		}
 	}
 
-	for (auto h : hideNode) {
-		temp_double = h.sum;
+	for (auto& h : hideNode) {
 		temp = h.target.size();
-		f.write((char*)& temp_double, sizeof(double));
+		f.write((char*)& h.id, sizeof(uint64_t));
+		f.write((char*)& h.bias, sizeof(double));
+		f.write((char*)& h.sum, sizeof(double));
 		f.write((char*)& temp, sizeof(uint64_t));
 		for (auto t : h.target) {
-			temp = t.first;
-			temp_double = t.second;
-			f.write((char*)& temp, sizeof(uint64_t));
-			f.write((char*)& temp_double, sizeof(double));
+			f.write((char*)& t.first, sizeof(uint64_t));
+			f.write((char*)& t.second, sizeof(double));
 			link++;
 			if ((int)(100 * link / link_Count) != persent)
 			{
@@ -447,15 +536,14 @@ void Brain::saveBrain(string filePath)
 	}
 
 	for (auto o : outputNode) {
-		temp_double = o.sum;
 		temp = o.target.size();
-		f.write((char*)& temp_double, sizeof(double));
+		f.write((char*)& o.id, sizeof(uint64_t));
+		f.write((char*)& o.bias, sizeof(double));
+		f.write((char*)& o.sum, sizeof(double));
 		f.write((char*)& temp, sizeof(uint64_t));
 		for (auto t : o.target) {
-			temp = t.first;
-			temp_double = t.second;
-			f.write((char*)& temp, sizeof(uint64_t));
-			f.write((char*)& temp_double, sizeof(double));
+			f.write((char*)& t.first, sizeof(uint64_t));
+			f.write((char*)& t.second, sizeof(double));
 			link++;
 			if ((int)(100 * link / link_Count) != persent)
 			{

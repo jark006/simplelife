@@ -11,29 +11,50 @@
 #include<map>
 #include<iomanip>
 #include<fstream>
-#include "pcg_basic.h"
 #include "utils.h"
 
 using namespace std;
 
-//±äÒìÀàĞÍ
-enum variationType { 
-	HIDE_NODE_CHANGE, //Òş²Ø½ÚµãÔö¼õ
-	LINK_CHANGE,      //Á¬½ÓÄ¿±êÔö¼õ
-	WEIGHT_CHANGE,    //È¨ÖØÔö¼õ
-
+//å˜å¼‚ç±»å‹
+enum variationType {
+	//INPUT_NODE_ADD,  //è¾“å…¥èŠ‚ç‚¹å¢åŠ 
+	//INPUT_NODE_SUB,  //è¾“å…¥èŠ‚ç‚¹å‡å°‘
+	//OUTPUT_NODE_ADD, //è¾“å‡ºèŠ‚ç‚¹å¢åŠ 
+	//OUTPUT_NODE_SUB, //è¾“å‡ºèŠ‚ç‚¹å‡å°‘
+	HIDE_NODE_ADD, //éšè—èŠ‚ç‚¹å¢åŠ 
+	//HIDE_NODE_SUB, //éšè—èŠ‚ç‚¹å‡å°‘
+	LINK_ADD,      //è¿æ¥ç›®æ ‡å¢åŠ 
+	LINK_SUB,      //è¿æ¥ç›®æ ‡å‡å°‘
+	WEIGHT_CHANGE, //æƒé‡å¢å‡
 };
 
 struct Node
 {
+	uint64_t id = 0;
 	double bias = 0;
 	double sum_in = 0;
 	double sum = 0;
 	double sum_old = 0;
 	double out = 0;
-	vector<pair<uint64_t, double>> target; //Ä¿±ê½Úµã¼°È¨Öµ
-	//vector<pair<uint64_t, double>> from;   //À´Ô´½Úµã¼°È¨Öµ
+	vector<pair<uint64_t, double>> target; //ç›®æ ‡èŠ‚ç‚¹åŠæƒå€¼
 };
+
+struct BrainFileHeader //128 bytes
+{
+	uint32_t mainVer_brain;
+	uint32_t subVer_brain;
+	uint32_t mainVer_body;
+	uint32_t subVer_body;
+
+	uint64_t inputNodeSize;
+	uint64_t hideNodeSize;
+	uint64_t outputNodeSize;
+	uint64_t score;
+
+	uint64_t reserve[10];
+
+};
+
 class Brain
 {
 public:
@@ -45,30 +66,30 @@ public:
 	void input_iterate(vector<double>& input);
 	void brain_iterate();
 	void output_iterate(vector<double>& output);
-	//inline uint32_t myRand();
-	//inline double myRand_1to1();
 	void printLink();
 
 	void reRandomWeight();
 	void saveBrain(string filePath);
 
+
+private:
 	vector<Node> inputNode;
 	vector<Node> hideNode;
 	vector<Node> outputNode;
 
 	uint64_t link_Count = 0;
 	uint64_t score = 0;
-	//pcg32_random_t rng;
 
-	//ÒÔÏÂ¼¸¸öÊıÖµÆ¾¸Ğ¾õÀ´µÄ
-	const double valueKeep = 1.0 - 0.618; //Òş²Ø½ÚµãÃ¿´Îµü´ú±£ÁôµÄÔ­È¨Öµ°Ù·Ö±È node.newSum = node.oldSum*0.xx + sumFromOthers*(1-0.xx);
+	//ä»¥ä¸‹å‡ ä¸ªæ•°å€¼å‡­æ„Ÿè§‰æ¥çš„
+	const double valueKeep = 1.0 - 0.618; //éšè—èŠ‚ç‚¹æ¯æ¬¡è¿­ä»£ä¿ç•™çš„åŸæƒå€¼æ¯”ä¾‹ node.newSum = node.oldSum*0.xx + sumFromOthers*(1-0.xx);
 
-	const double input2hideMax  = 0.15; //Ã¿¸öÊäÈë×î¶àÁ¬½ÓÒş²Ø½ÚµãµÄ°Ù·Ö±È
-	const double hide2hideMax   = 0.18; //Ã¿¸öÒş²Ø½Úµã×î¶àÁ¬½ÓÆäËûÒş²Ø½ÚµãÊıµÄ°Ù·Ö±È
-	const double hide2outputMax = 0.15; //Ã¿¸öÊä³ö×î¶àÁ¬½ÓÒş²Ø½ÚµãµÄ°Ù·Ö±È
+	const double input2hideMax = 0.15; //é»˜è®¤æ¯ä¸ªè¾“å…¥æœ€å¤šè¿æ¥éšè—èŠ‚ç‚¹çš„æ¯”ä¾‹
+	const double hide2hideMax = 0.18; //é»˜è®¤æ¯ä¸ªéšè—èŠ‚ç‚¹æœ€å¤šè¿æ¥å…¶ä»–éšè—èŠ‚ç‚¹æ•°çš„æ¯”ä¾‹
+	const double hide2outputMax = 0.15; //é»˜è®¤æ¯ä¸ªè¾“å‡ºæœ€å¤šè¿æ¥éšè—èŠ‚ç‚¹çš„æ¯”ä¾‹
 
-private:
-	//inline double sigmod(double in);
-	
+	const double deltaWeight = 0.0001; //æƒé‡å˜åŒ–å€¼
+
+
+
 };
 

@@ -1,7 +1,7 @@
-﻿// simplelife.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
+// life_simulation.cpp: 定义应用程序的入口点。
 //
 
-
+#include "body.h"
 #include "brain.h"
 #include "sha1.h"
 #include "utils.h"
@@ -12,51 +12,35 @@ void test();
 
 int main()
 {
-	//srand((uint32_t)time(nullptr));
+
+	test();
+	
+	
 	mySrand();
 
 	vector<double> input = { 1, 6 ,9, };
 	vector<double> output = { 5, 4 ,3, };
-	
 
-	test();
+	Brain mybrain(input.size(), 2000, output.size(), 0);
+	//Brain mybrain("D:\\brain_1568040796.bin");
 
 
-	Brain mybrain(input.size(), 10000, output.size(), 0);
-	//Brain mybrain("brain_1567538537.bin");
-	
-	
-	//mybrain.brain_iterate();
 	//mybrain.printLink();
-
-
 
 	mybrain.input_iterate(input);
-	int cc = 1;
-	while (cc--) {
-		int t = 100;
-		while (t--) {
 
-			mybrain.brain_iterate();
-			mybrain.output_iterate(output);
-			cout << t << ' ';
-			for (auto i : output) {
-				cout << i << ' ';
-			}
-			cout << endl;
+	int t = 20;
+	while (t--) {
+		mybrain.brain_iterate();
+		mybrain.output_iterate(output);
+		cout << t << ' ';
+		for (auto i : output) {
+			cout << i << ' ';
 		}
-		cout << "iterating... " << time(nullptr) << endl << endl;
-		//mybrain.reRandomWeight();
+		cout << endl;
 	}
-
-	//cout << endl;
-
-	//mybrain.printLink();
-	//mybrain.reRandomWeight();
-
-
-	//mybrain.input_iterate(input);
-
+	cout << "iterating... " << time(nullptr) << endl << endl;
+	
 
 
 
@@ -66,19 +50,32 @@ int main()
 	if (c == 'Y' || c == 'y')
 	{
 		cout << endl << "Saving..." << endl;
-		string filename = "brain_" + to_string(time(nullptr)) + ".bin";
+		string filename = "D:\\brain_" + to_string(time(nullptr)) + ".bin";
 		mybrain.saveBrain(filename);
 		cout << "File \"" << filename << "\" saved!" << endl;
 	}
-
-
+	return 0;
 }
 
 
 
 void test() {
-	for (int i = 0; i < 100; i++)
-		cout << myRand_0to1() << endl;
+
+	//vector<int> a = { 1,2, };
+	//vector<int> b = { 11,12,13,14 };
+
+	//for (auto i : a)
+	//	cout << i << ' ';
+	//cout << endl;
+
+	//a.assign(b.begin(), b.end());
+
+	//for (auto i : a)
+	//	cout << i << ' ';
+	//cout << endl;
+	cout << sizeof(BrainFileHeader) << endl;
+
 	exit(1);
 }
+
 
