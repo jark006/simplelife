@@ -3,13 +3,10 @@
 Brain::Brain(string filePath)
 {
 	auto t1 = time(nullptr);
-	//uint64_t heardInfo[16] = { 0 };
 	BrainFileHeader heardInfo;
 	uint64_t temp;
 	uint64_t temp2;
-	//uint64_t id_index;
 	double temp_double;
-	//uint64_t input_num, neuralNode, output_num;
 
 	cout << "Load brain from file: \"" << filePath << '\"' << endl;
 	ifstream f(filePath, ios::binary);
@@ -479,8 +476,7 @@ void Brain::reRandomWeight()
 void Brain::saveBrain(string filePath)
 {
 	uint64_t temp;
-	uint64_t heardInfo[16] = { 0 };
-	//double temp_double;
+	BrainFileHeader heardInfo;
 	uint64_t link = 0;
 	uint64_t persent = 0;
 
@@ -491,10 +487,10 @@ void Brain::saveBrain(string filePath)
 		return;
 	}
 
-	heardInfo[0] = inputNode.size();
-	heardInfo[1] = hideNode.size();
-	heardInfo[2] = outputNode.size();
-	heardInfo[3] = score;
+	heardInfo.inputNodeSize = inputNode.size();
+	heardInfo.hideNodeSize = hideNode.size();
+	heardInfo.outputNodeSize = outputNode.size();
+	heardInfo.score = score;
 
 	f.write((char*)& heardInfo, sizeof(heardInfo));
 

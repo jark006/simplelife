@@ -17,15 +17,15 @@ using namespace std;
 
 //变异类型
 enum variationType {
-	//INPUT_NODE_ADD,  //输入节点增加
-	//INPUT_NODE_SUB,  //输入节点减少
-	//OUTPUT_NODE_ADD, //输出节点增加
-	//OUTPUT_NODE_SUB, //输出节点减少
-	HIDE_NODE_ADD, //隐藏节点增加
-	//HIDE_NODE_SUB, //隐藏节点减少
-	LINK_ADD,      //连接目标增加
-	LINK_SUB,      //连接目标减少
-	WEIGHT_CHANGE, //权重增减
+	//INPUT_NODE_ADD = 0,  //输入节点增加
+	//INPUT_NODE_SUB = 1,  //输入节点减少
+	//OUTPUT_NODE_ADD = 2, //输出节点增加
+	//OUTPUT_NODE_SUB = 3, //输出节点减少
+	HIDE_NODE_ADD = 4, //隐藏节点增加
+	//HIDE_NODE_SUB = 5, //隐藏节点减少
+	LINK_ADD =6,      //连接目标增加
+	LINK_SUB =7,      //连接目标减少
+	WEIGHT_CHANGE =20, //权重增减
 };
 
 struct Node
@@ -71,6 +71,8 @@ public:
 	void reRandomWeight();
 	void saveBrain(string filePath);
 
+	uint64_t x = 0;
+	uint64_t y = 0;
 
 private:
 	vector<Node> inputNode;
@@ -79,6 +81,8 @@ private:
 
 	uint64_t link_Count = 0;
 	uint64_t score = 0;
+
+
 
 	//以下几个数值凭感觉来的
 	const double valueKeep = 1.0 - 0.618; //隐藏节点每次迭代保留的原权值比例 node.newSum = node.oldSum*0.xx + sumFromOthers*(1-0.xx);

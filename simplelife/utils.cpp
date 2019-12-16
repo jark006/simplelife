@@ -1,6 +1,9 @@
 
+#include <cmath>
 #include "utils.h"
 #include "pcg_basic.h"
+
+const double PI = acos(-1);
 
 pcg32_random_t rng;
 
