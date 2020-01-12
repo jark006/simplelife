@@ -1,6 +1,6 @@
-#include "brain.h"
+#include "brain_node.h"
 
-Brain::Brain(string filePath)
+BrainNode::BrainNode(string filePath)
 {
 	auto t1 = time(nullptr);
 	BrainFileHeader heardInfo;
@@ -80,7 +80,7 @@ Brain::Brain(string filePath)
 	cout << "Time use:" << time(nullptr) - t1 << endl << endl;
 }
 
-Brain::Brain(uint64_t input_num, uint64_t neuralNode, uint64_t output_num, uint64_t _score)
+BrainNode::BrainNode(uint64_t input_num, uint64_t neuralNode, uint64_t output_num, uint64_t _score)
 {
 	auto t1 = time(nullptr);
 	set<uint64_t> targetLink;
@@ -175,7 +175,7 @@ variationType: 变异类型
 	WEIGHT_CHANGE, //权重增减
 ratio:变异比例
 */
-Brain::Brain(Brain& parentBrain, variationType v_type, double ratio)
+BrainNode::BrainNode(BrainNode& parentBrain, variationType v_type, double ratio)
 {
 
 	inputNode.assign(parentBrain.inputNode.begin(), parentBrain.inputNode.end());
@@ -185,7 +185,7 @@ Brain::Brain(Brain& parentBrain, variationType v_type, double ratio)
 	score = parentBrain.score;
 	link_Count = parentBrain.link_Count;
 
-	Node newNode;
+	NeuronNode newNode;
 	set<uint64_t> targetLink;
 	set<uint64_t> newLink;
 	vector<pair<uint64_t, double>> newTarget; //目标节点及权值
@@ -196,7 +196,7 @@ Brain::Brain(Brain& parentBrain, variationType v_type, double ratio)
 
 	switch (v_type) //TODO
 	{
-	case HIDE_NODE_ADD:
+	case variationType::HIDE_NODE_ADD:
 	{
 		link_Count_temp = 0;
 		addNum = (uint64_t)(myRand() % (uint32_t)(hideNode.size() * ratio)) + 1; //新增隐藏节点数量
@@ -254,7 +254,7 @@ Brain::Brain(Brain& parentBrain, variationType v_type, double ratio)
 
 		break;
 	}
-	case LINK_ADD: //将会改变默认比例
+	case variationType::LINK_ADD: //将会改变默认比例
 	{
 		for (auto& i : inputNode) {
 			targetLink.clear();
@@ -311,7 +311,7 @@ Brain::Brain(Brain& parentBrain, variationType v_type, double ratio)
 
 		break;
 	}
-	case LINK_SUB:
+	case variationType::LINK_SUB:
 	{
 		for (auto& i : inputNode) {
 			newTarget.clear();
@@ -343,7 +343,7 @@ Brain::Brain(Brain& parentBrain, variationType v_type, double ratio)
 		}
 		break;
 	}
-	case WEIGHT_CHANGE:
+	case variationType::WEIGHT_CHANGE:
 	{
 		const int sign[4] = { -1, 0, 1, 0 };
 		for (auto& i : inputNode)
@@ -362,11 +362,11 @@ Brain::Brain(Brain& parentBrain, variationType v_type, double ratio)
 	}
 }
 
-Brain::~Brain()
+BrainNode::~BrainNode()
 {
 }
 
-void Brain::input_iterate(vector<double>& input)
+void BrainNode::input_iterate(vector<double>& input)
 {
 	if (input.size() < inputNode.size())
 	{
@@ -386,7 +386,7 @@ void Brain::input_iterate(vector<double>& input)
 			hideNode[t.first].sum_in += (i.out * t.second);
 }
 
-void Brain::brain_iterate()
+void BrainNode::inner_iterate()
 {
 	for (auto& h : hideNode)
 	{
@@ -404,7 +404,7 @@ void Brain::brain_iterate()
 		h.sum = h.sum_old * valueKeep + h.sum * (1.0 - valueKeep);
 }
 
-void Brain::output_iterate(vector<double>& output)
+void BrainNode::output_iterate(vector<double>& output)
 {
 	for (auto& o : outputNode)
 		o.sum = 0;
@@ -419,7 +419,7 @@ void Brain::output_iterate(vector<double>& output)
 		output[i] = outputNode[i].out;
 }
 
-void Brain::printLink()
+void BrainNode::printLink()
 {
 	int num = 0;
 	for (auto i : inputNode) {
@@ -453,7 +453,7 @@ void Brain::printLink()
 	cout << endl;
 }
 
-void Brain::reRandomWeight()
+void BrainNode::reRandomWeight()
 {
 	for (auto& i : inputNode) {
 		i.bias = myRand_1to1();
@@ -473,7 +473,7 @@ void Brain::reRandomWeight()
 			t.second = myRand_1to1();
 }
 
-void Brain::saveBrain(string filePath)
+void BrainNode::saveBrain(string filePath)
 {
 	uint64_t temp;
 	BrainFileHeader heardInfo;

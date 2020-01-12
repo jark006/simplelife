@@ -13,6 +13,9 @@
 #include <fstream>
 #include <windows.h>
 
+#include <thread>             // std::thread
+#include <mutex>              // std::mutex, std::unique_lock
+#include <condition_variable> // std::condition_variable
 using namespace std;
 
 
@@ -60,7 +63,7 @@ void genrateRoundPoint(int r)
 		Dot.push_back(temp);
 	}
 }
-int main()
+int maing()
 {
 	int r = 25;
 	genrateRoundPoint(r);
@@ -79,69 +82,69 @@ int main()
 	//f.close();
 }
 
-int maingg()
-{
-    std::cout << "Hello World!\n";
-	
-	//vector<pair<uint32_t, double>> a;
-	//set<uint32_t> c;
-	//map<uint32_t, double> b;
-
-	//int t1;
-	//int i;
-	//int n = 100000000;
-
-	//t1 = time(nullptr);
-	//i = n;
-	//while (i--)
-	//	a.push_back(pair<uint32_t, double>(i, i));
-	//cout << time(nullptr) - t1 << endl;
-
-	//t1 = time(nullptr);
-	//i = n;
-	//while (i--)
-	//	b.insert(pair<uint32_t, double>(i, i));
-	//cout << time(nullptr) - t1 << endl;
-
-	//t1 = time(nullptr);
-	//i = n;
-	//while (i--)
-	//	c.insert( i );
-	//cout << time(nullptr) - t1 << endl;
+// condition_variable example
 
 
-	//int y = 0;
-	//vector<int> aa(10);
-	//for (auto i : aa)
-	//{
-	//	cout << i;
-	//}
-	//for (auto i : aa)
-	//{
-	//	i = 66;
-	//}
-	//for (auto i : aa)
-	//{
-	//	cout << i;
-	//}
+vector<std::mutex> mtx_notify(10);
+std::mutex mtx2;
+std::condition_variable cv_main2thread;
+std::condition_variable cv_thread2main;
+bool ready2main = false;
+bool ready2thread = false;
 
-	int p = 0;
-	int len = 25;
-	for (int i = 0; i <= 100; i++) {
+vector<bool> ready(10, false);
 
-		cout << "\r[";
-		for (int j = 0; j < len; j++) {
-			if (j < (len * i / 100))
-				cout << '=';
-			else if (j == (len * i / 100))
-				cout << '>';
-			else
-				cout << ' ';
-		}
-		cout << "]" << i << "%";
-		Sleep(100);
+
+void print_id(int id) {
+	while (true)
+	{
+
+
+		std::unique_lock<std::mutex> lck(mtx_notify[id]);
+		while (!ready2thread) cv_main2thread.wait(lck);
+		// ...
+		this_thread::sleep_for(std::chrono::seconds(id));
+		std::cout << "thread " << id << '\n';
+
+
+
+
 	}
-
 }
 
+//void go() {
+//	//std::unique_lock<std::mutex> lck(mtx_notify[0]);
+//	ready2main = true;
+//	cv_main2thread.notify_all();
+//}
+
+int main()
+{
+	std::thread threads[10];
+	// spawn 10 threads:
+	for (int i = 0; i < 10; ++i)
+		threads[i] = std::thread(print_id, i);
+
+	std::cout << "10 threads ready to race...\n";
+	//go();                       // go!
+
+	while (true)
+	{
+
+		for (auto& b : ready)
+			b = true;
+
+		ready2thread = true;
+		std::cout << "10 threads ready to race...\n";
+		cv_main2thread.notify_all();
+
+
+
+	}
+
+
+	for (auto& th : threads) th.join();
+
+	return 0;
+}
 

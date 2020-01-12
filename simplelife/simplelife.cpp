@@ -1,61 +1,229 @@
-// life_simulation.cpp: 定义应用程序的入口点。
-//
+// brain_simulation.cpp
 
 #include "body.h"
-#include "brain.h"
+#include "brain_node.h"
+#include "brain_macro.h"
 #include "sha1.h"
 #include "utils.h"
 #include <iostream>
 #include <iomanip>
+#include <chrono>
+#include <mutex>
+#include <thread>
+
+using namespace std;
+
+//single 40000node 0.691s
+//multi  50 thread 800 neuron / node 0.0083s
+
+
+const char AuthorInfo_encodeToSHA256[] =
+"223CCAFEA58D3E29F87C55DEBF0B1D3F40A8EC83F95463E753215D2FD19523C2";
+
+const int THREAD_NUM = 50;
+const int NODE_LINKS = 8;
+const int NEURON_NUM_OF_BRAIN_NODE = 800;
+BrainNode* brainNodes[THREAD_NUM];
+
+
+int threadFinishCount = 0;
+enum class ThreadCmd { run,exit };
+
+vector<std::mutex> mtx_notify(THREAD_NUM);
+vector<std::mutex> mtx_ready(THREAD_NUM);
+std::mutex threadCntMtx;
+std::mutex mtx2;
+std::condition_variable cv_main2thread;
+std::condition_variable cv_thread2main;
+bool ready2main = false;
+ThreadCmd threadCmd = ThreadCmd::run;
+vector<bool> ready(THREAD_NUM, false);
+
+
+
+//brainNode Thread
+void brainNodeThread(int id) {
+	string s1 = "Thread " + to_string(id) + ": Ready.\r\n";
+	string s2 = "Thread " + to_string(id) + ": Running.\r\n";
+	std::cout <<  s1;
+	while (true) {
+		std::unique_lock<std::mutex> lck0(mtx_notify[id]);
+		while (!ready[id]) cv_main2thread.wait(lck0);
+
+		if (threadCmd == ThreadCmd::exit)
+			break;
+
+		//inner_iterate
+		brainNodes[id]->inner_iterate();
+
+
+		std::unique_lock<std::mutex> lck(mtx_ready[id]);
+		ready[id] = false;
+		lck.unlock();
+
+		std::unique_lock<std::mutex> lck2(threadCntMtx);
+		threadFinishCount++;
+		if (threadFinishCount >= THREAD_NUM) {
+			ready2main = true;
+			std::cout << "notify mainThread." << endl;
+			cv_thread2main.notify_all();
+		}
+		lck2.unlock();
+
+
+	}
+}
+
+//MultiThread
+int main(int argc, char* argv[]) {
+	using namespace std::chrono;
+
+	std::cout << "Hello world!" << endl;
+
+	mySrand();
+
+	{
+		BrainNode brainTemplate(NODE_LINKS, NEURON_NUM_OF_BRAIN_NODE, NODE_LINKS, 0);
+		for (int i = 0; i < THREAD_NUM; i++)
+			brainNodes[i] = new BrainNode(brainTemplate);
+	}
+	
+
+	std::thread threads[THREAD_NUM];
+	for (int i = 0; i < THREAD_NUM; ++i)
+		threads[i] = std::thread(brainNodeThread, i);
+	std::this_thread::sleep_for(2s);
+
+	//TODO   Macro struct of brain
+
+
+
+
+	//TODO   Macro struct of brain
+	auto t0 = high_resolution_clock::now();
+
+	int i = 10;
+	while (i--) {
+
+		//STEP1 system INPUT to macro
+
+		//STEP2 macro to brainNode
+
+
+
+		//STEP3 brainNode iterate
+		threadFinishCount = 0;		
+		std::cout << "Notify all threads to work." << endl;
+		for (int i = 0; i < THREAD_NUM; i++)
+			ready[i] = true;
+		cv_main2thread.notify_all();
+		
+		//waiting
+		std::unique_lock<std::mutex> lck(mtx2);
+		while (!ready2main) cv_thread2main.wait(lck);
+		ready2main = false;
+		std::cout << "All threads finish." << endl;
+
+
+
+
+		//STEP4 brainNode output to macro
+
+		//STEP5 macro to system OUTPUT
+
+
+
+		//TODO exit loop condition
+
+	}
+
+	//Requit all threads Exit.
+	threadCmd = ThreadCmd::exit;
+	std::cout << "Notify all threads exit." << endl;
+	for (int i = 0; i < THREAD_NUM; i++)
+		ready[i] = true;
+	cv_main2thread.notify_all();
+
+	auto time_span2 = duration_cast<duration<double>>(high_resolution_clock::now() - t0);
+	std::cout << "It took  " << time_span2.count() / 10 << " second per iterate." << endl;
+	std::cout << "" << 1000.0 / time_span2.count() << " Hz." << endl;
+
+	for (auto& th : threads) th.join();
+
+	std::cout << "All threads exit." << endl;
+
+	for (int i = 0; i < THREAD_NUM; i++)
+		delete brainNodes[i];
+	std::cout << "All brainNode's memory release." << endl;
+	std::cout << "System exit." << endl;
+
+	return 0;
+}
+
+
+
+
 
 void test();
 
-int main_sample()
+//SingleThread
+int main55()
 {
+	using namespace std::chrono;
 
-	test();
+	//test();
 
 
 	mySrand();
 
-	vector<double> input = { 1, 6 ,9, };
-	vector<double> output = { 5, 4 ,3, };
+	//test();
 
-	Brain mybrain(input.size(), 2000, output.size(), 0);
-	//Brain mybrain("D:\\brain_1568040796.bin");
+	vector<double> input = { 1, 2, 3, 4, 5, 6, 7, 8 };
+	vector<double> output = { 1, 2, 3, 4, 5, 6, 7, 8 };
+
+	BrainNode mybrainNode(input.size(), 40000, output.size(), 0);
+	//BrainNode mybrainNode("D:\\brain_2019-12-25_021246.bin");
 
 
-	//mybrain.printLink();
+	//mybrainNode.printLink();
 
-	mybrain.input_iterate(input);
+	mybrainNode.input_iterate(input);
 
-	int t = 20;
+	int t = 10;
+	int tt = t;
+
+	auto t0 = high_resolution_clock::now();
 	while (t--) {
-		mybrain.brain_iterate();
-		mybrain.output_iterate(output);
-		cout << t << ' ';
-		for (auto i : output) {
-			cout << i << ' ';
-		}
-		cout << endl;
+
+		mybrainNode.input_iterate(input);
+		mybrainNode.inner_iterate();
+		//mybrainNode.inner_iterate();
+		mybrainNode.output_iterate(output);
+
+
+		//auto time_span = duration_cast<duration<double>>(high_resolution_clock::now() - t1);
+		//std::cout << "It took  " << time_span.count() << " seconds." << endl;
+
 	}
-	cout << "iterating... " << time(nullptr) << endl << endl;
 
 
+	auto time_span2 = duration_cast<duration<double>>(high_resolution_clock::now() - t0);
+	std::cout << "It took  " << time_span2.count() / tt << " second per iterate." << endl;
+	std::cout << "" << 1000.0 / time_span2.count() << " Hz." << endl;
 
 
-	cout << "Do you want to save the brain(y/n)? ";
+	/*cout << "Do you want to save the brain(y/n)? ";
 	char c;
 	cin >> c;
 	if (c == 'Y' || c == 'y') {
 		cout << endl << "Saving..." << endl;
-		string filename = "D:\\brain_" + to_string(time(nullptr)) + ".bin";
-		mybrain.saveBrain(filename);
+		string filename = "D:\\brain_" + timeToStr(time(nullptr)) + ".bin";
+		mybrainNode.saveBrain(filename);
 		cout << "File \"" << filename << "\" saved!" << endl;
 	}
 	else {
 		cout << endl << "Exit without saving." << endl;
-	}
+	}*/
 	return 0;
 }
 
@@ -63,25 +231,15 @@ int main_sample()
 
 void test() {
 
-	//vector<int> a = { 1,2, };
-	//vector<int> b = { 11,12,13,14 };
 
-	//for (auto i : a)
-	//	cout << i << ' ';
-	//cout << endl;
-
-	//a.assign(b.begin(), b.end());
-
-	//for (auto i : a)
-	//	cout << i << ' ';
-	//cout << endl;
-	//cout << sizeof(BrainFileHeader) << endl;
-
-
-	for (int i = 5; i <= 30; i += 5) {
-		double sum = i + 0.5;
-		sum = sum*sum*PI;
-		cout << i << ' ' << (int)sum << endl;
+	int cc[20] = { 0 };
+	for (int i = 0; i < 100000000; i++) {
+		//cout << myRand_1to1() << endl;
+		int a = 10 * (myRand_1to1() + 1.0);
+		cc[a] ++;
+	}
+	for (auto i : cc) {
+		cout << i << endl;
 	}
 
 
@@ -89,21 +247,31 @@ void test() {
 }
 
 
-const int wordX = 1000;
-const int wordY = 1000;
-const int brainTimes = 10;
 
-int main(int argc, char* argv[]) {
+//game simulate test
+int mainXXX(int argc, char* argv[]) {
 	//cout << "Hello World!" << endl;
+
+
+	const int wordX = 1000;
+	const int wordY = 1000;
+	const int brainTimes = 10;
 
 	mySrand();
 
-	vector<double> input(36*3);
+	vector<double> input(36 * 3);//敌人 同伴 墙，3个感知层每个均为36个复眼一圈的视角
 	vector<double> output(2);
 	int world[wordX][wordY] = { 0 };
-	Brain mybrain(input.size(), 2000, output.size(), 0);
-	mybrain.x = 100;
-	mybrain.y = 100;
+	BrainNode brainTemplate(input.size(), 2000, output.size(), 0);
+	BrainNode* brains[20];//
+
+	Body  mybody;
+	mybody.x = 100;
+	mybody.y = 100;
+
+	for (auto& p : brains) {
+		p = new BrainNode(brainTemplate);
+	}
 
 
 	uint32_t times = 5000;
@@ -111,15 +279,15 @@ int main(int argc, char* argv[]) {
 
 
 		//墙感知
-		if (mybrain.x < 30 || mybrain.x >(wordX - 30) || 
-			mybrain.y < 30 || mybrain.y >(wordY - 30))
+		if (mybody.x < 30 || mybody.x >(wordX - 30) ||
+			mybody.y < 30 || mybody.y >(wordY - 30))
 		{
 			//TODO
 
 		}
 		else
 		{
-			for (int i = 0; i < input.size()/3; i++)
+			for (int i = 0; i < input.size() / 3; i++)
 				input[i] = 0;
 		}
 
@@ -127,36 +295,39 @@ int main(int argc, char* argv[]) {
 
 
 		//大脑思考
-		mybrain.input_iterate(input);
-		for(int i=0; i< brainTimes; i++)
-			mybrain.brain_iterate();
-		mybrain.output_iterate(output);
+		brainTemplate.input_iterate(input);
+		for (int i = 0; i < brainTimes; i++)
+			brainTemplate.inner_iterate();
+		brainTemplate.output_iterate(output);
 
 		//行动
 		if (output[0] > 0.618)
-			mybrain.x++;
+			mybody.x++;
 		else if (output[0] < 0.382)
-			mybrain.x--;
+			mybody.x--;
 		if (output[1] > 0.618)
-			mybrain.y++;
+			mybody.y++;
 		else if (output[1] < 0.382)
-			mybrain.y--;
+			mybody.y--;
 
 		//限制XY
-		if (mybrain.x < 0)
-			mybrain.x = 0;
-		else if (mybrain.x >= wordX)
-			mybrain.x = wordX - 1;
-		if (mybrain.y < 0)
-			mybrain.y = 0;
-		else if (mybrain.y >= wordY)
-			mybrain.y = wordY - 1;
+		if (mybody.x < 0)
+			mybody.x = 0;
+		else if (mybody.x >= wordX)
+			mybody.x = wordX - 1;
+		if (mybody.y < 0)
+			mybody.y = 0;
+		else if (mybody.y >= wordY)
+			mybody.y = wordY - 1;
 
 		//TODO 显示
 
 	}
 
 
+	for (auto& p : brains) {
+		delete p;
+	}
 
 	return 0;
 }

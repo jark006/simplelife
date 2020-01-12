@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="brain.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="pcg_basic.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -30,12 +27,15 @@
     <ClInclude Include="utils.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="brain_node.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="brain_macro.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="simplelife.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="brain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="pcg_basic.cpp">
@@ -48,6 +48,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="utils.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="brain_node.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="brain_macro.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

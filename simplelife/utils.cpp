@@ -25,13 +25,44 @@ inline uint32_t myRand()
 
 inline double myRand_1to1()
 {
-	return ((int)(pcg32_random_r(&rng) & 0xffffff) - 0x7fffff) / ((double)0x7fffff);
+	//return ((int)(pcg32_random_r(&rng) & 0xffffff) - 0x7fffff) / ((double)0x7fffff);
+	return ((long)pcg32_random_r(&rng) - (long)(UINT32_MAX / 2)) / ((double)(UINT32_MAX/2));
 }
 
 inline double myRand_0to1()
 {
-	return ((int)(pcg32_random_r(&rng) & 0xffffff)) / ((double)0xffffff);
+	//return ((int)(pcg32_random_r(&rng) & 0xffffff)) / ((double)0xffffff);
+	return (pcg32_random_r(&rng)  / ((double)(UINT32_MAX)));
 }
+
+std::string timeToStr(time_t timeStamp) {
+	tm ltm;
+	localtime_s(&ltm, &timeStamp);
+
+	std::string res = "0000-00-00_000000";
+	int year = 1900 + ltm.tm_year;
+
+	res[0] += year / 1000;
+	res[1] += (year / 100) % 10;
+	res[2] += (year / 10) % 10;
+	res[3] += year % 10;
+
+	res[5] += (1 + ltm.tm_mon) / 10;
+	res[6] += (1 + ltm.tm_mon) % 10;
+
+	res[8] += ltm.tm_mday / 10;
+	res[9] += ltm.tm_mday % 10;
+
+	res[11] += ltm.tm_hour / 10;
+	res[12] += ltm.tm_hour % 10;
+	res[13] += ltm.tm_min / 10;
+	res[14] += ltm.tm_min % 10;
+	res[15] += ltm.tm_sec / 10;
+	res[16] += ltm.tm_sec % 10;
+
+	return res;
+}
+
 
 //半径30的周围相对坐标，近到远排列 共2922
 // 5格及以内 < 95
@@ -40,7 +71,7 @@ inline double myRand_0to1()
 //20格及以内 < 1320
 //25格及以内 < 2042
 //30格及以内 < 2922
-int roundPoint[][2] = {
+const int roundPoint[][2] = {
 {1,0}, {0,1}, {0,-1}, {-1,0}, {1,1}, {1,-1}, {-1,1}, {-1,-1}, {2,0}, {0,2},
 {0,-2}, {-2,0}, {2,1}, {2,-1}, {1,2}, {1,-2}, {-1,2}, {-1,-2}, {-2,1}, {-2,-1},
 {2,2}, {2,-2}, {-2,2}, {-2,-2}, {3,0}, {0,3}, {0,-3}, {-3,0}, {3,1}, {3,-1},

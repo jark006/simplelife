@@ -16,7 +16,7 @@
 using namespace std;
 
 //变异类型
-enum variationType {
+enum class variationType {
 	//INPUT_NODE_ADD = 0,  //输入节点增加
 	//INPUT_NODE_SUB = 1,  //输入节点减少
 	//OUTPUT_NODE_ADD = 2, //输出节点增加
@@ -28,7 +28,7 @@ enum variationType {
 	WEIGHT_CHANGE =20, //权重增减
 };
 
-struct Node
+struct NeuronNode
 {
 	uint64_t id = 0;
 	double bias = 0;
@@ -55,29 +55,28 @@ struct BrainFileHeader //128 bytes
 
 };
 
-class Brain
+class BrainNode
 {
 public:
-	Brain(string filePath);
-	Brain(uint64_t input_num, uint64_t neuralNode, uint64_t out_num, uint64_t _score);
-	Brain(Brain& parentBrain, variationType v_type, double ratio);
-	~Brain();
+	BrainNode(string filePath);
+	BrainNode(uint64_t input_num, uint64_t neuralNode, uint64_t out_num, uint64_t _score);
+	BrainNode(BrainNode& parentBrain, variationType v_type, double ratio);
+	~BrainNode();
 
 	void input_iterate(vector<double>& input);
-	void brain_iterate();
+	void inner_iterate();
 	void output_iterate(vector<double>& output);
 	void printLink();
 
 	void reRandomWeight();
 	void saveBrain(string filePath);
 
-	uint64_t x = 0;
-	uint64_t y = 0;
+
 
 private:
-	vector<Node> inputNode;
-	vector<Node> hideNode;
-	vector<Node> outputNode;
+	vector<NeuronNode> inputNode;
+	vector<NeuronNode> hideNode;
+	vector<NeuronNode> outputNode;
 
 	uint64_t link_Count = 0;
 	uint64_t score = 0;

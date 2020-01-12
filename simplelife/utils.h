@@ -17,7 +17,9 @@ extern inline double sigmod(double in);
 extern inline uint32_t myRand();     //0 ~ uint32_max
 extern inline double myRand_1to1();  //precision: 3e-8
 extern inline double myRand_0to1();  //precision: 6e-8
-extern int roundPoint[][2];
+extern std::string timeToStr(time_t timeStamp);
+
+extern const int roundPoint[][2];
 extern const double PI;
 
 
