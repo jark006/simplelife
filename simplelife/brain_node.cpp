@@ -473,7 +473,7 @@ void BrainNode::reRandomWeight()
 			t.second = myRand_1to1();
 }
 
-void BrainNode::saveBrain(string filePath)
+void BrainNode::saveBrainNode(string filePath)
 {
 	uint64_t temp;
 	BrainFileHeader heardInfo;

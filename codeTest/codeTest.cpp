@@ -131,8 +131,8 @@ int main()
 	while (true)
 	{
 
-		for (auto& b : ready)
-			b = true;
+		for (int i = 0; i < 10; ++i)
+			ready[i] = true;
 
 		ready2thread = true;
 		std::cout << "10 threads ready to race...\n";

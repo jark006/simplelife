@@ -69,7 +69,7 @@ public:
 	void printLink();
 
 	void reRandomWeight();
-	void saveBrain(string filePath);
+	void saveBrainNode(string filePath);
 
 
 

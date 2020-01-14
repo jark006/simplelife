@@ -20,9 +20,9 @@ using namespace std;
 const char AuthorInfo_encodeToSHA256[] =
 "223CCAFEA58D3E29F87C55DEBF0B1D3F40A8EC83F95463E753215D2FD19523C2";
 
-const int THREAD_NUM = 50;
+const int THREAD_NUM = 4;
 const int NODE_LINKS = 8;
-const int NEURON_NUM_OF_BRAIN_NODE = 800;
+const int NEURON_NUM_OF_BRAIN_NODE = 2000;
 BrainNode* brainNodes[THREAD_NUM];
 
 
@@ -39,12 +39,13 @@ bool ready2main = false;
 ThreadCmd threadCmd = ThreadCmd::run;
 vector<bool> ready(THREAD_NUM, false);
 
+std::thread threads[THREAD_NUM];
 
 
 //brainNode Thread
 void brainNodeThread(int id) {
-	string s1 = "Thread " + to_string(id) + ": Ready.\r\n";
-	string s2 = "Thread " + to_string(id) + ": Running.\r\n";
+	string s1 = "Thread [" + to_string(id) + "]: Ready.\r\n";
+	//string s2 = "Thread [" + to_string(id) + "]: Running.\r\n";
 	std::cout <<  s1;
 	while (true) {
 		std::unique_lock<std::mutex> lck0(mtx_notify[id]);
@@ -65,8 +66,8 @@ void brainNodeThread(int id) {
 		threadFinishCount++;
 		if (threadFinishCount >= THREAD_NUM) {
 			ready2main = true;
-			std::cout << "notify mainThread." << endl;
-			cv_thread2main.notify_all();
+			//std::cout << "notify mainThread." << endl;
+			cv_thread2main.notify_one();
 		}
 		lck2.unlock();
 
@@ -78,18 +79,19 @@ void brainNodeThread(int id) {
 int main(int argc, char* argv[]) {
 	using namespace std::chrono;
 
-	std::cout << "Hello world!" << endl;
+	//std::cout << "Hello world!" << endl;
 
 	mySrand();
 
 	{
+		std::cout << "Initial brainNodes..." << endl;
 		BrainNode brainTemplate(NODE_LINKS, NEURON_NUM_OF_BRAIN_NODE, NODE_LINKS, 0);
 		for (int i = 0; i < THREAD_NUM; i++)
-			brainNodes[i] = new BrainNode(brainTemplate);
+			brainNodes[i] = new BrainNode("D:\\brain_2020-01-14_051216.bin");
+		std::cout << "Initial over." << endl;
 	}
 	
 
-	std::thread threads[THREAD_NUM];
 	for (int i = 0; i < THREAD_NUM; ++i)
 		threads[i] = std::thread(brainNodeThread, i);
 	std::this_thread::sleep_for(2s);
@@ -102,9 +104,10 @@ int main(int argc, char* argv[]) {
 	//TODO   Macro struct of brain
 	auto t0 = high_resolution_clock::now();
 
-	int i = 10;
+	int i = 1000;
+	int times = i;
 	while (i--) {
-
+		//std::cout << "Iterate " << i << endl;
 		//STEP1 system INPUT to macro
 
 		//STEP2 macro to brainNode
@@ -113,7 +116,7 @@ int main(int argc, char* argv[]) {
 
 		//STEP3 brainNode iterate
 		threadFinishCount = 0;		
-		std::cout << "Notify all threads to work." << endl;
+		//std::cout << "Notify all threads to work." << endl;
 		for (int i = 0; i < THREAD_NUM; i++)
 			ready[i] = true;
 		cv_main2thread.notify_all();
@@ -122,7 +125,7 @@ int main(int argc, char* argv[]) {
 		std::unique_lock<std::mutex> lck(mtx2);
 		while (!ready2main) cv_thread2main.wait(lck);
 		ready2main = false;
-		std::cout << "All threads finish." << endl;
+		//std::cout << "All threads finish." << endl;
 
 
 
@@ -145,8 +148,8 @@ int main(int argc, char* argv[]) {
 	cv_main2thread.notify_all();
 
 	auto time_span2 = duration_cast<duration<double>>(high_resolution_clock::now() - t0);
-	std::cout << "It took  " << time_span2.count() / 10 << " second per iterate." << endl;
-	std::cout << "" << 1000.0 / time_span2.count() << " Hz." << endl;
+	std::cout << "It took  " << 1000.0*time_span2.count() / times << " ms per iterate." << endl;
+	std::cout << "" << (double)times / time_span2.count() << " Hz." << endl;
 
 	for (auto& th : threads) th.join();
 
@@ -157,8 +160,21 @@ int main(int argc, char* argv[]) {
 	std::cout << "All brainNode's memory release." << endl;
 	std::cout << "System exit." << endl;
 
+
+	getchar();
+
+
 	return 0;
 }
+
+
+
+
+
+
+
+
+
 
 
 
@@ -181,26 +197,31 @@ int main55()
 	vector<double> input = { 1, 2, 3, 4, 5, 6, 7, 8 };
 	vector<double> output = { 1, 2, 3, 4, 5, 6, 7, 8 };
 
-	BrainNode mybrainNode(input.size(), 40000, output.size(), 0);
-	//BrainNode mybrainNode("D:\\brain_2019-12-25_021246.bin");
+	//BrainNode mybrainNode(input.size(), 1000, output.size(), 0);
+	BrainNode mybrainNode("D:\\brain_2020-01-14_051216.bin");
 
 
 	//mybrainNode.printLink();
 
 	mybrainNode.input_iterate(input);
 
-	int t = 10;
-	int tt = t;
+	int t = 1000;
+	int times = t;
 
 	auto t0 = high_resolution_clock::now();
 	while (t--) {
+
+		//for (auto& i : input)
+		//	i = (int)(myRand_1to1() * 10);
 
 		mybrainNode.input_iterate(input);
 		mybrainNode.inner_iterate();
 		//mybrainNode.inner_iterate();
 		mybrainNode.output_iterate(output);
 
-
+		//cout << endl << t << ':';
+		//for (auto o : output)
+		//	cout << o << ' ';
 		//auto time_span = duration_cast<duration<double>>(high_resolution_clock::now() - t1);
 		//std::cout << "It took  " << time_span.count() << " seconds." << endl;
 
@@ -208,22 +229,21 @@ int main55()
 
 
 	auto time_span2 = duration_cast<duration<double>>(high_resolution_clock::now() - t0);
-	std::cout << "It took  " << time_span2.count() / tt << " second per iterate." << endl;
-	std::cout << "" << 1000.0 / time_span2.count() << " Hz." << endl;
+	std::cout << "It took  " << 1000.0 * time_span2.count() / times << " ms per iterate." << endl;
+	std::cout << "" << (double)times / time_span2.count() << " Hz." << endl;
 
-
-	/*cout << "Do you want to save the brain(y/n)? ";
-	char c;
-	cin >> c;
-	if (c == 'Y' || c == 'y') {
-		cout << endl << "Saving..." << endl;
-		string filename = "D:\\brain_" + timeToStr(time(nullptr)) + ".bin";
-		mybrainNode.saveBrain(filename);
-		cout << "File \"" << filename << "\" saved!" << endl;
-	}
-	else {
-		cout << endl << "Exit without saving." << endl;
-	}*/
+	//cout << "Do you want to save the brain(y/n)? ";
+	//char c;
+	//cin >> c;
+	//if (c == 'Y' || c == 'y') {
+	//	cout << endl << "Saving..." << endl;
+	//	string filename = "D:\\brain_" + timeToStr(time(nullptr)) + ".bin";
+	//	mybrainNode.saveBrainNode(filename);
+	//	cout << "File \"" << filename << "\" saved!" << endl;
+	//}
+	//else {
+	//	cout << endl << "Exit without saving." << endl;
+	//}
 	return 0;
 }
 
