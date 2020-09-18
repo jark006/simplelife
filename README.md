@@ -1,10 +1,11 @@
 # simplelife
 
-Link: https://github.com/jark006/simplelife
+## Windows10 VS2019
+## lib: EasyX <b>https://easyx.cn/</b>
 
-Link: https://gitee.com/jark006/simplelife
+### 随机连接的神经网络，变异全靠随机
 
-## end
+### 富人靠科技，穷人靠变异
 
 
 
